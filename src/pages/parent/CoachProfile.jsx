@@ -14,10 +14,15 @@ export default function CoachProfile() {
   const [error, setError] = useState(null)
   const [bookingSession, setBookingSession] = useState(null)
 
+  const [sessionsError, setSessionsError] = useState(null)
+
   function loadSessions() {
     apiRequest(`/coaches/${coachId}/sessions/for-me`)
       .then((data) => setSessions(data.items))
-      .catch(() => setSessions([]))
+      .catch((err) => {
+        setSessions([])
+        setSessionsError(err.detail || 'Не получилось загрузить тренировки')
+      })
   }
 
   useEffect(() => {
@@ -77,7 +82,8 @@ export default function CoachProfile() {
         <h2 className="font-semibold pt-2">Ближайшие тренировки</h2>
 
         {sessions === null && <p className="text-sm text-neutral-400">Загрузка…</p>}
-        {sessions?.length === 0 && (
+        {sessionsError && <p className="text-action text-sm">{sessionsError}</p>}
+        {sessions?.length === 0 && !sessionsError && (
           <p className="text-sm text-neutral-500">Пока нет запланированных тренировок.</p>
         )}
 
