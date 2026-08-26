@@ -1,13 +1,69 @@
 import { useState } from 'react'
-import { LogOut, Send, MapPin, User as UserIcon } from 'lucide-react'
+import { LogOut, Send, MapPin, Trash2, Plus } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { apiRequest, ApiError } from '../api/client'
+import { useChildren } from '../hooks/useChildren'
+import { POSITION_LABELS } from '../utils/labels'
+import { age } from '../utils/date'
+import AddChildModal from '../components/AddChildModal'
 
 const ROLE_LABELS = {
   coach: 'Тренер',
   parent: 'Родитель',
   arena_admin: 'Администратор арены',
   admin: 'Администратор платформы',
+}
+
+function ChildrenSection() {
+  const { children, loading, addChild, removeChild } = useChildren()
+  const [showAdd, setShowAdd] = useState(false)
+
+  return (
+    <div className="card">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-semibold">Мои дети</h2>
+        <button
+          onClick={() => setShowAdd(true)}
+          className="flex items-center gap-1 text-sm text-action font-medium"
+        >
+          <Plus className="w-4 h-4" /> Добавить
+        </button>
+      </div>
+
+      {loading && <p className="text-sm text-neutral-400">Загрузка…</p>}
+      {!loading && children.length === 0 && (
+        <p className="text-sm text-neutral-500">
+          Пока никого не добавили — без этого не получится записаться на тренировку.
+        </p>
+      )}
+
+      <ul className="space-y-2">
+        {children.map((child) => (
+          <li
+            key={child.id}
+            className="flex items-center justify-between py-2 border-b border-ice-100 last:border-0"
+          >
+            <div>
+              <p className="font-medium text-sm">{child.name}</p>
+              <p className="text-xs text-neutral-500">
+                {age(child.birth_date)} лет · {POSITION_LABELS[child.position]}
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                if (confirm(`Удалить ${child.name} из профиля?`)) removeChild(child.id)
+              }}
+              className="p-2 text-neutral-400"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      {showAdd && <AddChildModal onClose={() => setShowAdd(false)} onAdd={addChild} />}
+    </div>
+  )
 }
 
 export default function Profile() {
@@ -48,6 +104,8 @@ export default function Profile() {
           <span>{user.city}</span>
         </div>
       )}
+
+      {user.role === 'parent' && <ChildrenSection />}
 
       <div className="card">
         <button

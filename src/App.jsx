@@ -4,6 +4,54 @@ import BottomNav from './components/BottomNav'
 import AuthFlow from './pages/AuthFlow'
 import Profile from './pages/Profile'
 import ComingSoon from './pages/ComingSoon'
+import CoachCatalog from './pages/parent/CoachCatalog'
+import CoachProfile from './pages/parent/CoachProfile'
+import Schedule from './pages/parent/Schedule'
+import CoachHome from './pages/coach/CoachHome'
+import SessionDetail from './pages/coach/SessionDetail'
+
+function ParentRoutes() {
+  return (
+    <Routes>
+      <Route path="/" element={<CoachCatalog />} />
+      <Route path="/coaches/:coachId" element={<CoachProfile />} />
+      <Route path="/schedule" element={<Schedule />} />
+      <Route path="/exercises" element={<ComingSoon title="Видеоупражнения" />} />
+      <Route path="/profile" element={<Profile />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  )
+}
+
+function CoachRoutes() {
+  return (
+    <Routes>
+      <Route path="/" element={<CoachHome />} />
+      <Route path="/sessions/:sessionId" element={<SessionDetail />} />
+      <Route path="/players" element={<ComingSoon title="Клиентская база" />} />
+      <Route path="/ice" element={<ComingSoon title="Аренда льда" />} />
+      <Route path="/profile" element={<Profile />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  )
+}
+
+function ArenaRoutes() {
+  return (
+    <Routes>
+      <Route path="/" element={<ComingSoon title="Мои слоты льда" />} />
+      <Route path="/requests" element={<ComingSoon title="Заявки" />} />
+      <Route path="/profile" element={<Profile />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  )
+}
+
+const ROUTES_BY_ROLE = {
+  parent: ParentRoutes,
+  coach: CoachRoutes,
+  arena_admin: ArenaRoutes,
+}
 
 function AppShell() {
   const { user, loading } = useAuth()
@@ -24,13 +72,7 @@ function AppShell() {
     )
   }
 
-  // Экраны-заглушки для функционала следующих шагов разработки,
-  // сгруппированы по роли — набор вкладок задаёт BottomNav.
-  const homeTitleByRole = {
-    parent: 'Каталог тренеров',
-    coach: 'Мои тренировки',
-    arena_admin: 'Мои слоты льда',
-  }
+  const RoleRoutes = ROUTES_BY_ROLE[user.role] || ParentRoutes
 
   return (
     <div className="min-h-screen pb-20">
@@ -39,16 +81,7 @@ function AppShell() {
       </header>
 
       <main className="max-w-sm mx-auto">
-        <Routes>
-          <Route path="/" element={<ComingSoon title={homeTitleByRole[user.role] || 'Главная'} />} />
-          <Route path="/schedule" element={<ComingSoon title="Расписание" />} />
-          <Route path="/exercises" element={<ComingSoon title="Видеоупражнения" />} />
-          <Route path="/players" element={<ComingSoon title="Клиентская база" />} />
-          <Route path="/ice" element={<ComingSoon title="Аренда льда" />} />
-          <Route path="/requests" element={<ComingSoon title="Заявки" />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <RoleRoutes />
       </main>
 
       <BottomNav role={user.role} />
