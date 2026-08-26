@@ -1,0 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-ice-100 text-rink-900 font-body antialiased;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+  /* "Номер на свитере" — фирменный элемент для чисел/статистики */
+  .jersey-stat {
+    @apply font-display font-bold bg-rink-900 text-white rounded-lg
+           inline-flex items-center justify-center;
+  }
+
+  .btn-primary {
+    @apply bg-action text-white font-medium rounded-card px-5 py-3
+           active:bg-action-hover transition-colors
+           disabled:opacity-40 disabled:pointer-events-none;
+  }
+
+  .btn-secondary {
+    @apply bg-white text-rink-900 font-medium rounded-card px-5 py-3
+           border border-ice-300 active:bg-ice-100 transition-colors;
+  }
+
+  .card {
+    @apply bg-white rounded-card shadow-sm border border-ice-200 p-4;
+  }
+
+  .input-field {
+    @apply w-full bg-white border border-ice-300 rounded-card px-4 py-3
+           text-rink-900 placeholder:text-neutral-400
+           focus:outline-none focus:border-rink-700 focus:ring-2 focus:ring-rink-700/10
+           transition-colors;
+  }
+}
