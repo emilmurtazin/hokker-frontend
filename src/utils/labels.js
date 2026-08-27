@@ -1,3 +1,29 @@
+export const ICE_TYPE_LABELS = {
+  full: 'Полный лёд',
+  half: 'Половина льда',
+  third: 'Треть льда',
+}
+
+export const SLOT_STATUS_LABELS = {
+  available: 'Свободен',
+  pending: 'Заявка на рассмотрении',
+  booked: 'Забронирован',
+  cancelled: 'Отменён',
+}
+
+export const SLOT_REQUEST_STATUS_LABELS = {
+  pending: 'Ждёт решения арены',
+  approved: 'Подтверждена',
+  rejected: 'Отклонена',
+  cancelled_by_coach: 'Отменена вами',
+}
+
+export const SLOT_REQUEST_STATUS_COLORS = {
+  pending: 'text-goal bg-goal-light',
+  approved: 'text-green-700 bg-green-50',
+  rejected: 'text-neutral-400 bg-ice-100',
+  cancelled_by_coach: 'text-neutral-400 bg-ice-100',
+}
 export const SPECIALIZATION_LABELS = {
   skating: 'Катание',
   shooting: 'Броски',

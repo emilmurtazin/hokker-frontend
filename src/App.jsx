@@ -10,6 +10,9 @@ import Schedule from './pages/parent/Schedule'
 import CoachHome from './pages/coach/CoachHome'
 import SessionDetail from './pages/coach/SessionDetail'
 import Players from './pages/coach/Players'
+import IceRental from './pages/coach/IceRental'
+import ArenaHome from './pages/arena/ArenaHome'
+import ArenaRequests from './pages/arena/ArenaRequests'
 
 function ParentRoutes() {
   return (
@@ -30,7 +33,7 @@ function CoachRoutes() {
       <Route path="/" element={<CoachHome />} />
       <Route path="/sessions/:sessionId" element={<SessionDetail />} />
       <Route path="/players" element={<Players />} />
-      <Route path="/ice" element={<ComingSoon title="Аренда льда" />} />
+      <Route path="/ice" element={<IceRental />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
@@ -40,8 +43,8 @@ function CoachRoutes() {
 function ArenaRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<ComingSoon title="Мои слоты льда" />} />
-      <Route path="/requests" element={<ComingSoon title="Заявки" />} />
+      <Route path="/" element={<ArenaHome />} />
+      <Route path="/requests" element={<ArenaRequests />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

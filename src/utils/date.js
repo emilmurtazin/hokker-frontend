@@ -25,6 +25,21 @@ export function formatTime(iso) {
   return timeFormatter.format(new Date(iso))
 }
 
+export function formatSlotTime(timeStr) {
+  return timeStr?.slice(0, 5) || ''
+}
+
+export function formatSlotDate(dateStr) {
+  // date-only строка "2026-09-10" — new Date() интерпретирует её как UTC
+  // полночь, что может сдвинуть день в минус при выводе в локальной TZ.
+  // Разбираем вручную, чтобы избежать этого смещения.
+  const [y, m, d] = dateStr.split('-').map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString('ru-RU', {
+    day: '2-digit',
+    month: 'long',
+    weekday: 'short',
+  })
+}
 export function age(birthDateIso) {
   const birth = new Date(birthDateIso)
   const today = new Date()
