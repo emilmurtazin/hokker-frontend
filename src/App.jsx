@@ -9,6 +9,7 @@ import CoachProfile from './pages/parent/CoachProfile'
 import Schedule from './pages/parent/Schedule'
 import CoachHome from './pages/coach/CoachHome'
 import SessionDetail from './pages/coach/SessionDetail'
+import Players from './pages/coach/Players'
 
 function ParentRoutes() {
   return (
@@ -28,7 +29,7 @@ function CoachRoutes() {
     <Routes>
       <Route path="/" element={<CoachHome />} />
       <Route path="/sessions/:sessionId" element={<SessionDetail />} />
-      <Route path="/players" element={<ComingSoon title="Клиентская база" />} />
+      <Route path="/players" element={<Players />} />
       <Route path="/ice" element={<ComingSoon title="Аренда льда" />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="*" element={<Navigate to="/" replace />} />

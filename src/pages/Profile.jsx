@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { LogOut, Send, MapPin, Trash2, Plus } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { LogOut, Send, MapPin, Trash2, Plus, Check, X as XIcon } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { apiRequest, ApiError } from '../api/client'
 import { useChildren } from '../hooks/useChildren'
@@ -12,6 +12,67 @@ const ROLE_LABELS = {
   parent: 'Родитель',
   arena_admin: 'Администратор арены',
   admin: 'Администратор платформы',
+}
+
+function InvitesSection() {
+  const [invites, setInvites] = useState(null)
+  const [busyId, setBusyId] = useState(null)
+  const [error, setError] = useState(null)
+
+  function load() {
+    apiRequest('/parents/me/invites')
+      .then(setInvites)
+      .catch((err) => setError(err.detail || 'Не получилось загрузить приглашения'))
+  }
+
+  useEffect(load, [])
+
+  async function respond(id, action) {
+    setBusyId(id)
+    try {
+      await apiRequest(`/parents/me/invites/${id}/${action}`, { method: 'POST' })
+      load()
+    } catch (err) {
+      setError(err.detail || 'Не получилось ответить на приглашение')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  if (invites === null || invites.length === 0) return null
+
+  return (
+    <div className="card border-goal/40 bg-goal-light/40">
+      <h2 className="font-semibold mb-3">Приглашения от тренеров</h2>
+      {error && <p className="text-action text-sm mb-2">{error}</p>}
+      <div className="space-y-2">
+        {invites.map((inv) => (
+          <div key={inv.id} className="flex items-center justify-between bg-white rounded-card p-3">
+            <div>
+              <p className="font-medium text-sm">{inv.player_name}</p>
+              <p className="text-xs text-neutral-500">Приглашает тренер {inv.coach_name}</p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => respond(inv.id, 'accept')}
+                disabled={busyId === inv.id}
+                className="p-2 bg-green-50 text-green-700 rounded-full"
+              >
+                <Check className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => respond(inv.id, 'decline')}
+                disabled={busyId === inv.id}
+                className="p-2 bg-action-light text-action rounded-full"
+              >
+                <XIcon className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 function ChildrenSection() {
@@ -105,6 +166,7 @@ export default function Profile() {
         </div>
       )}
 
+      {user.role === 'parent' && <InvitesSection />}
       {user.role === 'parent' && <ChildrenSection />}
 
       <div className="card">

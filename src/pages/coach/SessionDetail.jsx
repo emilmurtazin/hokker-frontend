@@ -5,6 +5,76 @@ import { apiRequest } from '../../api/client'
 import { SESSION_TYPE_LABELS, BOOKING_STATUS_LABELS, BOOKING_STATUS_COLORS } from '../../utils/labels'
 import { formatDateTime } from '../../utils/date'
 
+const ATTENDANCE_OPTIONS = [
+  { value: 'present', icon: '✅', label: 'Был' },
+  { value: 'absent', icon: '❌', label: 'Не был' },
+  { value: 'sick', icon: '🤒', label: 'Болел' },
+  { value: 'no_reason', icon: '❓', label: 'Без причины' },
+]
+
+function AttendanceSection({ sessionId }) {
+  const [rows, setRows] = useState(null)
+  const [savingId, setSavingId] = useState(null)
+  const [error, setError] = useState(null)
+
+  function load() {
+    apiRequest(`/sessions/${sessionId}/attendance`)
+      .then(setRows)
+      .catch((err) => setError(err.detail || 'Не получилось загрузить посещаемость'))
+  }
+
+  useEffect(load, [sessionId])
+
+  async function setStatus(playerId, status) {
+    setSavingId(playerId)
+    try {
+      await apiRequest(`/sessions/${sessionId}/attendance`, {
+        method: 'POST',
+        body: { marks: [{ player_id: playerId, status }] },
+      })
+      load()
+    } catch (err) {
+      setError(err.detail || 'Не получилось сохранить отметку')
+    } finally {
+      setSavingId(null)
+    }
+  }
+
+  if (rows === null) return null
+  if (rows.length === 0) return null // нечего отмечать, пока никто не confirmed
+
+  return (
+    <div>
+      <h2 className="text-sm font-semibold text-neutral-500 mb-2">Посещаемость</h2>
+      {error && <p className="text-action text-sm mb-2">{error}</p>}
+      <div className="space-y-2">
+        {rows.map((r) => (
+          <div key={r.player_id} className="card">
+            <p className="font-medium text-sm mb-2">{r.player_name}</p>
+            <div className="grid grid-cols-4 gap-1.5">
+              {ATTENDANCE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setStatus(r.player_id, opt.value)}
+                  disabled={savingId === r.player_id}
+                  className={`flex flex-col items-center gap-0.5 py-2 rounded-card text-xs font-medium transition-colors ${
+                    r.status === opt.value
+                      ? 'bg-rink-900 text-white'
+                      : 'bg-ice-100 text-neutral-500'
+                  }`}
+                >
+                  <span className="text-base">{opt.icon}</span>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function SessionDetail() {
   const { sessionId } = useParams()
   const navigate = useNavigate()
@@ -129,6 +199,8 @@ export default function SessionDetail() {
             ))}
           </div>
         </div>
+
+        <AttendanceSection sessionId={sessionId} />
 
         <button
           onClick={handleCancelSession}
