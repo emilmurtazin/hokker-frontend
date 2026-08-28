@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ChevronLeft, Check, X as XIcon, Trash2 } from 'lucide-react'
+import { ChevronLeft, Check, X as XIcon, Trash2, Star } from 'lucide-react'
 import { apiRequest } from '../../api/client'
-import { SESSION_TYPE_LABELS, BOOKING_STATUS_LABELS, BOOKING_STATUS_COLORS } from '../../utils/labels'
+import { SESSION_TYPE_LABELS, BOOKING_STATUS_LABELS, BOOKING_STATUS_COLORS, SKILL_LABELS } from '../../utils/labels'
 import { formatDateTime } from '../../utils/date'
 
 const ATTENDANCE_OPTIONS = [
@@ -66,6 +66,136 @@ function AttendanceSection({ sessionId }) {
                   <span className="text-base">{opt.icon}</span>
                   {opt.label}
                 </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function ScoreButtons({ value, onChange, disabled }) {
+  return (
+    <div className="flex gap-1">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          key={n}
+          type="button"
+          onClick={() => onChange(n)}
+          disabled={disabled}
+          className={`w-7 h-7 rounded-full text-xs font-semibold transition-colors ${
+            value === n ? 'bg-rink-900 text-white' : 'bg-ice-100 text-neutral-500'
+          }`}
+        >
+          {n}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function RatingsSection({ sessionId, confirmedPlayers }) {
+  const [ratings, setRatings] = useState(null)
+  const [error, setError] = useState(null)
+  const [groupSkill, setGroupSkill] = useState('discipline')
+  const [groupScore, setGroupScore] = useState(null)
+  const [groupBusy, setGroupBusy] = useState(false)
+  const [savingKey, setSavingKey] = useState(null)
+
+  function load() {
+    apiRequest(`/sessions/${sessionId}/ratings`)
+      .then(setRatings)
+      .catch((err) => setError(err.detail || 'Не получилось загрузить оценки'))
+  }
+
+  useEffect(load, [sessionId])
+
+  if (confirmedPlayers.length === 0) return null
+
+  const scoreFor = (playerId, skill) =>
+    ratings?.find((r) => r.player_id === playerId && r.skill === skill)?.score ?? null
+
+  async function applyToGroup() {
+    if (!groupScore) return
+    setGroupBusy(true)
+    setError(null)
+    try {
+      await apiRequest(`/sessions/${sessionId}/ratings/group`, {
+        method: 'POST',
+        body: { skill: groupSkill, score: groupScore },
+      })
+      setGroupScore(null)
+      load()
+    } catch (err) {
+      setError(err.detail || 'Не получилось поставить оценку группе')
+    } finally {
+      setGroupBusy(false)
+    }
+  }
+
+  async function setIndividual(playerId, skill, score) {
+    const key = `${playerId}-${skill}`
+    setSavingKey(key)
+    try {
+      await apiRequest(`/sessions/${sessionId}/ratings`, {
+        method: 'POST',
+        body: { entries: [{ player_id: playerId, skill, score }] },
+      })
+      load()
+    } catch (err) {
+      setError(err.detail || 'Не получилось сохранить оценку')
+    } finally {
+      setSavingKey(null)
+    }
+  }
+
+  return (
+    <div>
+      <h2 className="text-sm font-semibold text-neutral-500 mb-2">Оценки</h2>
+      {error && <p className="text-action text-sm mb-2">{error}</p>}
+
+      <div className="card mb-3">
+        <p className="text-sm font-medium mb-2 flex items-center gap-1.5">
+          <Star className="w-4 h-4 text-goal" /> Оценить всех сразу
+        </p>
+        <select
+          value={groupSkill}
+          onChange={(e) => setGroupSkill(e.target.value)}
+          className="input-field mb-2 text-sm py-2"
+        >
+          {Object.entries(SKILL_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <div className="flex items-center justify-between">
+          <ScoreButtons value={groupScore} onChange={setGroupScore} disabled={groupBusy} />
+          <button
+            onClick={applyToGroup}
+            disabled={!groupScore || groupBusy}
+            className="btn-primary py-1.5 px-3 text-sm"
+          >
+            Применить
+          </button>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        {confirmedPlayers.map((p) => (
+          <div key={p.player_id} className="card">
+            <p className="font-medium text-sm mb-2">{p.player_name}</p>
+            <div className="space-y-1.5">
+              {Object.entries(SKILL_LABELS).map(([skill, label]) => (
+                <div key={skill} className="flex items-center justify-between">
+                  <span className="text-xs text-neutral-500 w-28 shrink-0">{label}</span>
+                  <ScoreButtons
+                    value={scoreFor(p.player_id, skill)}
+                    onChange={(n) => setIndividual(p.player_id, skill, n)}
+                    disabled={savingKey === `${p.player_id}-${skill}`}
+                  />
+                </div>
               ))}
             </div>
           </div>
@@ -201,6 +331,13 @@ export default function SessionDetail() {
         </div>
 
         <AttendanceSection sessionId={sessionId} />
+
+        <RatingsSection
+          sessionId={sessionId}
+          confirmedPlayers={bookings
+            .filter((b) => b.status === 'confirmed')
+            .map((b) => ({ player_id: b.player_id, player_name: b.player_name }))}
+        />
 
         <button
           onClick={handleCancelSession}

@@ -7,6 +7,7 @@ import ComingSoon from './pages/ComingSoon'
 import CoachCatalog from './pages/parent/CoachCatalog'
 import CoachProfile from './pages/parent/CoachProfile'
 import Schedule from './pages/parent/Schedule'
+import ChildProgress from './pages/parent/ChildProgress'
 import CoachHome from './pages/coach/CoachHome'
 import SessionDetail from './pages/coach/SessionDetail'
 import Players from './pages/coach/Players'
@@ -19,6 +20,7 @@ function ParentRoutes() {
     <Routes>
       <Route path="/" element={<CoachCatalog />} />
       <Route path="/coaches/:coachId" element={<CoachProfile />} />
+      <Route path="/children/:childId/progress" element={<ChildProgress />} />
       <Route path="/schedule" element={<Schedule />} />
       <Route path="/exercises" element={<ComingSoon title="Видеоупражнения" />} />
       <Route path="/profile" element={<Profile />} />

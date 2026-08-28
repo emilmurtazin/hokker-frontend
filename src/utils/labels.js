@@ -1,3 +1,11 @@
+export const SKILL_LABELS = {
+  skating: 'Катание',
+  stickhandling: 'Владение клюшкой',
+  shooting: 'Бросок',
+  tactics: 'Тактика',
+  discipline: 'Дисциплина',
+}
+
 export const ICE_TYPE_LABELS = {
   full: 'Полный лёд',
   half: 'Половина льда',

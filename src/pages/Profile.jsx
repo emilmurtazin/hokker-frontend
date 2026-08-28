@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { LogOut, Send, MapPin, Trash2, Plus, Check, X as XIcon } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { LogOut, Send, MapPin, Trash2, Plus, Check, X as XIcon, ChevronRight } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { apiRequest, ApiError } from '../api/client'
 import { useChildren } from '../hooks/useChildren'
@@ -78,6 +79,7 @@ function InvitesSection() {
 function ChildrenSection() {
   const { children, loading, addChild, removeChild } = useChildren()
   const [showAdd, setShowAdd] = useState(false)
+  const navigate = useNavigate()
 
   return (
     <div className="card">
@@ -102,7 +104,8 @@ function ChildrenSection() {
         {children.map((child) => (
           <li
             key={child.id}
-            className="flex items-center justify-between py-2 border-b border-ice-100 last:border-0"
+            onClick={() => navigate(`/children/${child.id}/progress`)}
+            className="flex items-center justify-between py-2 border-b border-ice-100 last:border-0 cursor-pointer"
           >
             <div>
               <p className="font-medium text-sm">{child.name}</p>
@@ -110,14 +113,18 @@ function ChildrenSection() {
                 {age(child.birth_date)} лет · {POSITION_LABELS[child.position]}
               </p>
             </div>
-            <button
-              onClick={() => {
-                if (confirm(`Удалить ${child.name} из профиля?`)) removeChild(child.id)
-              }}
-              className="p-2 text-neutral-400"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (confirm(`Удалить ${child.name} из профиля?`)) removeChild(child.id)
+                }}
+                className="p-2 text-neutral-400"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+              <ChevronRight className="w-4 h-4 text-neutral-300" />
+            </div>
           </li>
         ))}
       </ul>
