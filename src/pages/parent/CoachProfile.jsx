@@ -97,6 +97,11 @@ export default function CoachProfile() {
                     <p className="font-medium">{SESSION_TYPE_LABELS[s.type] || s.type}</p>
                     <p className="text-sm text-neutral-500">{formatDateTime(s.datetime)}</p>
                     {s.arena_name && <p className="text-xs text-neutral-400 mt-0.5">{s.arena_name}</p>}
+                    {s.price != null && (
+                      <p className="text-xs text-rink-700 font-medium mt-0.5">
+                        {s.price.toLocaleString('ru-RU')} ₽ с человека
+                      </p>
+                    )}
                   </div>
                   {s.visibility === 'closed' && (
                     <span className="text-xs bg-ice-200 text-neutral-500 px-2 py-1 rounded-full">

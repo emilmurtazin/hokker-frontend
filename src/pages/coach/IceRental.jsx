@@ -158,7 +158,7 @@ function MyRequests() {
 }
 
 export default function IceRental() {
-  const [tab, setTab] = useState('catalog')
+  const [tab, setTab] = useState('requests')
 
   return (
     <div className="px-5 py-5">
@@ -166,20 +166,20 @@ export default function IceRental() {
 
       <div className="flex gap-2 mb-4">
         <button
-          onClick={() => setTab('catalog')}
-          className={`px-3.5 py-1.5 rounded-full text-sm font-medium ${
-            tab === 'catalog' ? 'bg-rink-900 text-white' : 'bg-white border border-ice-300'
-          }`}
-        >
-          Каталог
-        </button>
-        <button
           onClick={() => setTab('requests')}
           className={`px-3.5 py-1.5 rounded-full text-sm font-medium ${
             tab === 'requests' ? 'bg-rink-900 text-white' : 'bg-white border border-ice-300'
           }`}
         >
           Мои заявки
+        </button>
+        <button
+          onClick={() => setTab('catalog')}
+          className={`px-3.5 py-1.5 rounded-full text-sm font-medium ${
+            tab === 'catalog' ? 'bg-rink-900 text-white' : 'bg-white border border-ice-300'
+          }`}
+        >
+          Каталог
         </button>
       </div>
 

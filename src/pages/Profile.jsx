@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { LogOut, Send, MapPin, Trash2, Plus, Check, X as XIcon, ChevronRight } from 'lucide-react'
+import { LogOut, Send, MapPin, Trash2, Plus, Check, X as XIcon, ChevronRight, Pencil } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { apiRequest, ApiError } from '../api/client'
 import { useChildren } from '../hooks/useChildren'
 import { POSITION_LABELS } from '../utils/labels'
 import { age } from '../utils/date'
 import AddChildModal from '../components/AddChildModal'
+import EditChildModal from '../components/EditChildModal'
 
 const ROLE_LABELS = {
   coach: 'Тренер',
@@ -77,8 +78,9 @@ function InvitesSection() {
 }
 
 function ChildrenSection() {
-  const { children, loading, addChild, removeChild } = useChildren()
+  const { children, loading, addChild, removeChild, updateChildInList } = useChildren()
   const [showAdd, setShowAdd] = useState(false)
+  const [editingChild, setEditingChild] = useState(null)
   const navigate = useNavigate()
 
   return (
@@ -117,6 +119,15 @@ function ChildrenSection() {
               <button
                 onClick={(e) => {
                   e.stopPropagation()
+                  setEditingChild(child)
+                }}
+                className="p-2 text-neutral-400"
+              >
+                <Pencil className="w-4 h-4" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
                   if (confirm(`Удалить ${child.name} из профиля?`)) removeChild(child.id)
                 }}
                 className="p-2 text-neutral-400"
@@ -130,6 +141,13 @@ function ChildrenSection() {
       </ul>
 
       {showAdd && <AddChildModal onClose={() => setShowAdd(false)} onAdd={addChild} />}
+      {editingChild && (
+        <EditChildModal
+          child={editingChild}
+          onClose={() => setEditingChild(null)}
+          onSaved={updateChildInList}
+        />
+      )}
     </div>
   )
 }

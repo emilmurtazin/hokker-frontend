@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { apiRequest } from '../../api/client'
 import { SPECIALIZATION_LABELS } from '../../utils/labels'
 
-export default function CoachProfileForm({ initial, onSaved }) {
+export default function CoachProfileForm({ initial, onSaved, onCancel }) {
   const [specialization, setSpecialization] = useState(initial?.specialization || 'general')
   const [experienceYears, setExperienceYears] = useState(initial?.experience_years ?? '')
   const [about, setAbout] = useState(initial?.about || '')
   const [ageGroups, setAgeGroups] = useState(initial?.age_groups || '')
+  const [visibleInSearch, setVisibleInSearch] = useState(initial?.visible_in_search ?? true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
 
@@ -22,6 +23,7 @@ export default function CoachProfileForm({ initial, onSaved }) {
           experience_years: experienceYears === '' ? null : Number(experienceYears),
           about: about || null,
           age_groups: ageGroups || null,
+          visible_in_search: visibleInSearch,
         },
       })
       onSaved(profile)
@@ -93,10 +95,33 @@ export default function CoachProfileForm({ initial, onSaved }) {
           />
         </label>
 
+        <label className="flex items-start gap-3 p-3.5 rounded-card border border-ice-300 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={visibleInSearch}
+            onChange={(e) => setVisibleInSearch(e.target.checked)}
+            className="mt-1"
+          />
+          <span>
+            <span className="block font-medium text-sm">Показывать меня в поиске</span>
+            <span className="block text-xs text-neutral-500">
+              Если выключить — вы пропадёте из каталога и общей ленты тренировок,
+              но действующие клиенты и записи не пострадают.
+            </span>
+          </span>
+        </label>
+
         {error && <p className="text-action text-sm">{error}</p>}
-        <button type="submit" disabled={busy} className="btn-primary w-full">
-          {busy ? 'Сохраняем…' : 'Сохранить'}
-        </button>
+        <div className="flex gap-2">
+          {onCancel && (
+            <button type="button" onClick={onCancel} className="btn-secondary flex-1">
+              Отмена
+            </button>
+          )}
+          <button type="submit" disabled={busy} className="btn-primary flex-1">
+            {busy ? 'Сохраняем…' : 'Сохранить'}
+          </button>
+        </div>
       </form>
     </div>
   )

@@ -3,12 +3,20 @@ import { X } from 'lucide-react'
 import { apiRequest } from '../api/client'
 import { SESSION_TYPE_LABELS } from '../utils/labels'
 
+function localDatetimeNow() {
+  const now = new Date()
+  const offset = now.getTimezoneOffset()
+  const local = new Date(now.getTime() - offset * 60000)
+  return local.toISOString().slice(0, 16)
+}
+
 export default function CreateSessionModal({ onClose, onCreated }) {
   const [type, setType] = useState('ice')
   const [visibility, setVisibility] = useState('open')
   const [datetimeLocal, setDatetimeLocal] = useState('')
   const [arenaName, setArenaName] = useState('')
   const [maxPlayers, setMaxPlayers] = useState(10)
+  const [price, setPrice] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
 
@@ -29,6 +37,7 @@ export default function CreateSessionModal({ onClose, onCreated }) {
           datetime: isoDatetime,
           arena_name: arenaName || null,
           max_players: Number(maxPlayers),
+          price: price === '' ? null : Number(price),
         },
       })
       onCreated(session)
@@ -95,6 +104,7 @@ export default function CreateSessionModal({ onClose, onCreated }) {
             <input
               type="datetime-local"
               required
+              min={localDatetimeNow()}
               value={datetimeLocal}
               onChange={(e) => setDatetimeLocal(e.target.value)}
               className="input-field"
@@ -122,6 +132,18 @@ export default function CreateSessionModal({ onClose, onCreated }) {
               value={maxPlayers}
               onChange={(e) => setMaxPlayers(e.target.value)}
               className="input-field"
+            />
+          </label>
+
+          <label className="block">
+            <span className="block text-sm font-medium mb-1.5">Цена с человека, ₽ (необязательно)</span>
+            <input
+              type="number"
+              min="0"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              className="input-field"
+              placeholder="1500"
             />
           </label>
 

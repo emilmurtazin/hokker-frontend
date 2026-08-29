@@ -29,5 +29,9 @@ export function useChildren() {
     setChildren((prev) => prev.filter((c) => c.id !== childId))
   }
 
-  return { children, loading, error, refetch, addChild, removeChild }
+  function updateChildInList(updated) {
+    setChildren((prev) => prev.map((c) => (c.id === updated.id ? updated : c)))
+  }
+
+  return { children, loading, error, refetch, addChild, removeChild, updateChildInList }
 }

@@ -10,8 +10,8 @@ const ROLES = [
   { value: 'arena_admin', label: 'Я администратор арены', hint: 'Публикую свободный лёд' },
 ]
 
-function normalizePhoneInput(value) {
-  return value.replace(/[^\d+]/g, '')
+function digitsOnly(value) {
+  return value.replace(/\D/g, '')
 }
 
 export default function AuthFlow() {
@@ -19,7 +19,7 @@ export default function AuthFlow() {
   const navigate = useNavigate()
 
   const [step, setStep] = useState('phone') // phone -> code -> register
-  const [phone, setPhone] = useState('')
+  const [phoneDigits, setPhoneDigits] = useState('')
   const [requestId, setRequestId] = useState(null)
   const [code, setCode] = useState('')
   const [registrationToken, setRegistrationToken] = useState(null)
@@ -33,9 +33,15 @@ export default function AuthFlow() {
   async function handlePhoneSubmit(e) {
     e.preventDefault()
     setError(null)
+
+    if (phoneDigits.length !== 10) {
+      setError('Введите корректный номер телефона — 10 цифр после +7')
+      return
+    }
+
     setBusy(true)
     try {
-      const data = await requestCode(phone)
+      const data = await requestCode(`+7${phoneDigits}`)
       setRequestId(data.request_id)
       setDebugCode(data.debug_code || null)
       setStep('code')
@@ -92,22 +98,27 @@ export default function AuthFlow() {
           <form onSubmit={handlePhoneSubmit} className="space-y-4">
             <label className="block">
               <span className="block text-sm font-medium text-rink-900 mb-1.5">Номер телефона</span>
-              <div className="relative">
-                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+              <div className="relative flex items-center input-field pl-11 gap-1">
+                <Phone className="absolute left-4 w-4 h-4 text-neutral-400" />
+                <span className="text-neutral-500 select-none">+7</span>
                 <input
                   type="tel"
                   required
                   autoFocus
-                  inputMode="tel"
-                  placeholder="+7 999 123-45-67"
-                  value={phone}
-                  onChange={(e) => setPhone(normalizePhoneInput(e.target.value))}
-                  className="input-field pl-11"
+                  inputMode="numeric"
+                  placeholder="9991234567"
+                  value={phoneDigits}
+                  onChange={(e) => setPhoneDigits(digitsOnly(e.target.value).slice(0, 10))}
+                  className="flex-1 bg-transparent outline-none min-w-0"
                 />
               </div>
             </label>
             {error && <p className="text-action text-sm">{error}</p>}
-            <button type="submit" disabled={busy || !phone} className="btn-primary w-full">
+            <button
+              type="submit"
+              disabled={busy || phoneDigits.length !== 10}
+              className="btn-primary w-full"
+            >
               {busy ? 'Отправляем код…' : 'Получить код'}
             </button>
           </form>
@@ -124,7 +135,7 @@ export default function AuthFlow() {
             </button>
             <label className="block">
               <span className="block text-sm font-medium text-rink-900 mb-1.5">
-                Код из SMS на {phone}
+                Код из SMS на +7{phoneDigits}
               </span>
               <div className="relative">
                 <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />

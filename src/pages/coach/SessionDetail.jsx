@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Check, X as XIcon, Trash2, Star } from 'lucide-react'
 import { apiRequest } from '../../api/client'
-import { SESSION_TYPE_LABELS, BOOKING_STATUS_LABELS, BOOKING_STATUS_COLORS, SKILL_LABELS } from '../../utils/labels'
+import { SESSION_TYPE_LABELS, BOOKING_STATUS_LABELS, BOOKING_STATUS_COLORS, SKILL_LABELS, POSITION_LABELS } from '../../utils/labels'
 import { formatDateTime } from '../../utils/date'
 
 const ATTENDANCE_OPTIONS = [
@@ -285,22 +285,32 @@ export default function SessionDetail() {
             </h2>
             <div className="space-y-2">
               {pending.map((b) => (
-                <div key={b.id} className="card flex items-center justify-between">
-                  <span className="font-medium text-sm">{b.player_name}</span>
+                <div key={b.id} className="card border-goal border">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <p className="font-semibold text-sm">{b.player_name}</p>
+                      <p className="text-xs text-neutral-500">
+                        {b.player_age} лет · {POSITION_LABELS[b.player_position] || b.player_position}
+                      </p>
+                      <p className="text-xs text-neutral-400 mt-0.5">
+                        {b.parent_name} · {b.parent_phone}
+                      </p>
+                    </div>
+                  </div>
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleApprove(b.id)}
                       disabled={busyId === b.id}
-                      className="p-2 bg-green-50 text-green-700 rounded-full"
+                      className="flex items-center gap-1.5 justify-center flex-1 py-2 bg-green-50 text-green-700 rounded-card text-sm font-medium"
                     >
-                      <Check className="w-4 h-4" />
+                      <Check className="w-4 h-4" /> Подтвердить
                     </button>
                     <button
                       onClick={() => handleReject(b.id)}
                       disabled={busyId === b.id}
-                      className="p-2 bg-action-light text-action rounded-full"
+                      className="flex items-center gap-1.5 justify-center flex-1 py-2 bg-action-light text-action rounded-card text-sm font-medium"
                     >
-                      <XIcon className="w-4 h-4" />
+                      <XIcon className="w-4 h-4" /> Отклонить
                     </button>
                   </div>
                 </div>
