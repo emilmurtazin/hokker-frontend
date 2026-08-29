@@ -7,7 +7,7 @@ import { SPECIALIZATION_LABELS, SESSION_TYPE_LABELS } from '../../utils/labels'
 import { formatDateTime } from '../../utils/date'
 import BookSessionModal from '../../components/BookSessionModal'
 
-function CoachesList({ city, specialization }) {
+function CoachesList({ city, specialization, ageGroup }) {
   const navigate = useNavigate()
   const [coaches, setCoaches] = useState(null)
   const [error, setError] = useState(null)
@@ -22,12 +22,13 @@ function CoachesList({ city, specialization }) {
     setError(null)
     const params = new URLSearchParams({ city })
     if (specialization) params.set('specialization', specialization)
+    if (ageGroup) params.set('age_group', ageGroup)
 
     apiRequest(`/coaches?${params.toString()}`)
       .then((data) => setCoaches(data.items))
       .catch((err) => setError(err.detail || 'Не получилось загрузить тренеров'))
       .finally(() => setLoading(false))
-  }, [city, specialization])
+  }, [city, specialization, ageGroup])
 
   if (!city) {
     return (
@@ -43,7 +44,8 @@ function CoachesList({ city, specialization }) {
       {loading && <p className="text-sm text-neutral-400 text-center py-6">Ищем тренеров…</p>}
       {coaches && !loading && coaches.length === 0 && (
         <p className="text-sm text-neutral-500 text-center py-8">
-          В городе «{city}» пока нет тренеров{specialization ? ' с этой специализацией' : ''}.
+          В городе «{city}» пока нет тренеров
+          {specialization || ageGroup ? ' с такими фильтрами' : ''}.
         </p>
       )}
 
@@ -177,10 +179,13 @@ function TrainingsFeed({ city }) {
   )
 }
 
+const AGE_GROUPS = ['6-9', '10-12', '13+']
+
 export default function CoachCatalog() {
   const { user } = useAuth()
   const [city, setCity] = useState(user?.city || '')
   const [specialization, setSpecialization] = useState('')
+  const [ageGroup, setAgeGroup] = useState('')
   const [tab, setTab] = useState('coaches')
 
   return (
@@ -217,33 +222,58 @@ export default function CoachCatalog() {
         </div>
 
         {tab === 'coaches' && (
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-            <SlidersHorizontal className="w-4 h-4 text-neutral-400 shrink-0" />
-            <button
-              onClick={() => setSpecialization('')}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                specialization === '' ? 'bg-rink-900 text-white' : 'bg-white border border-ice-300'
-              }`}
-            >
-              Все
-            </button>
-            {Object.entries(SPECIALIZATION_LABELS).map(([value, label]) => (
+          <>
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1 mb-2">
+              <SlidersHorizontal className="w-4 h-4 text-neutral-400 shrink-0" />
               <button
-                key={value}
-                onClick={() => setSpecialization(value)}
+                onClick={() => setSpecialization('')}
                 className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                  specialization === value ? 'bg-rink-900 text-white' : 'bg-white border border-ice-300'
+                  specialization === '' ? 'bg-rink-900 text-white' : 'bg-white border border-ice-300'
                 }`}
               >
-                {label}
+                Все
               </button>
-            ))}
-          </div>
+              {Object.entries(SPECIALIZATION_LABELS).map(([value, label]) => (
+                <button
+                  key={value}
+                  onClick={() => setSpecialization(value)}
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                    specialization === value ? 'bg-rink-900 text-white' : 'bg-white border border-ice-300'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+              <span className="text-xs text-neutral-400 shrink-0 w-5 text-center">🎂</span>
+              <button
+                onClick={() => setAgeGroup('')}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  ageGroup === '' ? 'bg-rink-900 text-white' : 'bg-white border border-ice-300'
+                }`}
+              >
+                Любой возраст
+              </button>
+              {AGE_GROUPS.map((value) => (
+                <button
+                  key={value}
+                  onClick={() => setAgeGroup(value)}
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                    ageGroup === value ? 'bg-rink-900 text-white' : 'bg-white border border-ice-300'
+                  }`}
+                >
+                  {value}
+                </button>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
       {tab === 'coaches' ? (
-        <CoachesList city={city} specialization={specialization} />
+        <CoachesList city={city} specialization={specialization} ageGroup={ageGroup} />
       ) : (
         <TrainingsFeed city={city} />
       )}
