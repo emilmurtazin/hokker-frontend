@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Phone, ShieldCheck, ChevronLeft } from 'lucide-react'
+import { Phone, ShieldCheck, ChevronLeft, AlertTriangle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { ApiError } from '../api/client'
 
@@ -29,10 +29,12 @@ export default function AuthFlow() {
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
   const [debugCode, setDebugCode] = useState(null) // видно только в local-окружении бэкенда
+  const [smsWarning, setSmsWarning] = useState(null)
 
   async function handlePhoneSubmit(e) {
     e.preventDefault()
     setError(null)
+    setSmsWarning(null)
 
     if (phoneDigits.length !== 10) {
       setError('Введите корректный номер телефона — 10 цифр после +7')
@@ -44,6 +46,7 @@ export default function AuthFlow() {
       const data = await requestCode(`+7${phoneDigits}`)
       setRequestId(data.request_id)
       setDebugCode(data.debug_code || null)
+      setSmsWarning(data.warning || null)
       setStep('code')
     } catch (err) {
       setError(err instanceof ApiError ? err.detail : 'Не получилось отправить код')
@@ -133,6 +136,14 @@ export default function AuthFlow() {
             >
               <ChevronLeft className="w-4 h-4" /> Изменить номер
             </button>
+
+            {smsWarning && (
+              <div className="flex items-start gap-2 bg-goal-light text-rink-900 rounded-card px-3.5 py-2.5 text-sm mb-1">
+                <AlertTriangle className="w-4 h-4 text-goal shrink-0 mt-0.5" />
+                <span>{smsWarning}</span>
+              </div>
+            )}
+
             <label className="block">
               <span className="block text-sm font-medium text-rink-900 mb-1.5">
                 Код из SMS на +7{phoneDigits}
