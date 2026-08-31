@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Plus, ChevronRight, AlertCircle, Settings } from 'lucide-react'
 import { apiRequest } from '../../api/client'
 import { SESSION_TYPE_LABELS } from '../../utils/labels'
-import { formatDateTime } from '../../utils/date'
+import { formatDateTime, formatDurationMinutes } from '../../utils/date'
 import CoachProfileForm from './CoachProfileForm'
 import CreateSessionModal from '../../components/CreateSessionModal'
 
@@ -14,6 +14,7 @@ export default function CoachHome() {
   const [pendingBySession, setPendingBySession] = useState({})
   const [showCreate, setShowCreate] = useState(false)
   const [editingProfile, setEditingProfile] = useState(false)
+  const [showPast, setShowPast] = useState(false)
 
   function loadProfile() {
     apiRequest('/coaches/me/profile')
@@ -109,7 +110,9 @@ export default function CoachHome() {
       )}
 
       <div className="space-y-3">
-        {sessions?.map((s) => {
+        {sessions
+          ?.filter((s) => showPast || new Date(s.datetime) >= new Date())
+          .map((s) => {
           const pendingCount = pendingBySession[s.id] || 0
           return (
             <button
@@ -126,7 +129,9 @@ export default function CoachHome() {
               )}
               <div>
                 <p className="font-medium">{SESSION_TYPE_LABELS[s.type] || s.type}</p>
-                <p className="text-sm text-neutral-500">{formatDateTime(s.datetime)}</p>
+                <p className="text-sm text-neutral-500">
+                  {formatDateTime(s.datetime)} · {formatDurationMinutes(s.duration_minutes)}
+                </p>
                 <div className="flex items-center gap-2 mt-1.5">
                   <span
                     className={`text-xs px-2 py-0.5 rounded-full ${
@@ -152,6 +157,13 @@ export default function CoachHome() {
           )
         })}
       </div>
+
+      <button
+        onClick={() => setShowPast((v) => !v)}
+        className="text-sm text-neutral-500 font-medium underline underline-offset-2"
+      >
+        {showPast ? 'Скрыть прошедшие' : 'Показать прошедшие'}
+      </button>
 
       {showCreate && (
         <CreateSessionModal

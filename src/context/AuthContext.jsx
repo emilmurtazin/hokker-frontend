@@ -65,8 +65,16 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
+  async function updateProfile(patch) {
+    const updated = await apiRequest('/users/me', { method: 'PATCH', body: patch })
+    setUser(updated)
+    return updated
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, requestCode, verifyCode, register, logout }}>
+    <AuthContext.Provider
+      value={{ user, loading, requestCode, verifyCode, register, logout, updateProfile }}
+    >
       {children}
     </AuthContext.Provider>
   )

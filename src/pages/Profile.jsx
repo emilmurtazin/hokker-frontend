@@ -8,6 +8,8 @@ import { POSITION_LABELS } from '../utils/labels'
 import { age } from '../utils/date'
 import AddChildModal from '../components/AddChildModal'
 import EditChildModal from '../components/EditChildModal'
+import EditNameCityModal from '../components/EditNameCityModal'
+import ConfirmModal from '../components/ConfirmModal'
 
 const ROLE_LABELS = {
   coach: 'Тренер',
@@ -81,7 +83,19 @@ function ChildrenSection() {
   const { children, loading, addChild, removeChild, updateChildInList } = useChildren()
   const [showAdd, setShowAdd] = useState(false)
   const [editingChild, setEditingChild] = useState(null)
+  const [deletingChild, setDeletingChild] = useState(null)
+  const [deleteBusy, setDeleteBusy] = useState(false)
   const navigate = useNavigate()
+
+  async function handleConfirmDelete() {
+    setDeleteBusy(true)
+    try {
+      await removeChild(deletingChild.id)
+      setDeletingChild(null)
+    } finally {
+      setDeleteBusy(false)
+    }
+  }
 
   return (
     <div className="card">
@@ -128,7 +142,7 @@ function ChildrenSection() {
               <button
                 onClick={(e) => {
                   e.stopPropagation()
-                  if (confirm(`Удалить ${child.name} из профиля?`)) removeChild(child.id)
+                  setDeletingChild(child)
                 }}
                 className="p-2 text-neutral-400"
               >
@@ -148,6 +162,15 @@ function ChildrenSection() {
           onSaved={updateChildInList}
         />
       )}
+      {deletingChild && (
+        <ConfirmModal
+          title="Удалить ребёнка?"
+          message={`«${deletingChild.name}» будет удалён из профиля. Это действие нельзя отменить.`}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeletingChild(null)}
+          busy={deleteBusy}
+        />
+      )}
     </div>
   )
 }
@@ -156,6 +179,7 @@ export default function Profile() {
   const { user, logout } = useAuth()
   const [linking, setLinking] = useState(false)
   const [linkError, setLinkError] = useState(null)
+  const [editingProfile, setEditingProfile] = useState(false)
 
   async function handleTelegramLink() {
     setLinking(true)
@@ -178,10 +202,16 @@ export default function Profile() {
         <div className="jersey-stat w-14 h-14 text-xl shrink-0">
           {user.name?.[0]?.toUpperCase() || '?'}
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <h1 className="text-lg font-semibold truncate">{user.name}</h1>
           <p className="text-sm text-neutral-500">{ROLE_LABELS[user.role] || user.role}</p>
         </div>
+        <button
+          onClick={() => setEditingProfile(true)}
+          className="p-2 text-neutral-400 border border-ice-300 rounded-card shrink-0"
+        >
+          <Pencil className="w-4 h-4" />
+        </button>
       </div>
 
       {user.city && (
@@ -218,6 +248,8 @@ export default function Profile() {
         <LogOut className="w-4 h-4" />
         Выйти
       </button>
+
+      {editingProfile && <EditNameCityModal onClose={() => setEditingProfile(false)} />}
     </div>
   )
 }

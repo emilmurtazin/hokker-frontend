@@ -11,6 +11,7 @@ import ChildProgress from './pages/parent/ChildProgress'
 import CoachHome from './pages/coach/CoachHome'
 import SessionDetail from './pages/coach/SessionDetail'
 import Players from './pages/coach/Players'
+import PlayerAttendanceHistory from './pages/coach/PlayerAttendanceHistory'
 import IceRental from './pages/coach/IceRental'
 import ArenaHome from './pages/arena/ArenaHome'
 import ArenaRequests from './pages/arena/ArenaRequests'
@@ -35,6 +36,7 @@ function CoachRoutes() {
       <Route path="/" element={<CoachHome />} />
       <Route path="/sessions/:sessionId" element={<SessionDetail />} />
       <Route path="/players" element={<Players />} />
+      <Route path="/players/:coachPlayerId/attendance" element={<PlayerAttendanceHistory />} />
       <Route path="/ice" element={<IceRental />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="*" element={<Navigate to="/" replace />} />

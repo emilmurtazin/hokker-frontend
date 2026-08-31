@@ -186,7 +186,7 @@ export default function CoachCatalog() {
   const [city, setCity] = useState(user?.city || '')
   const [specialization, setSpecialization] = useState('')
   const [ageGroup, setAgeGroup] = useState('')
-  const [tab, setTab] = useState('coaches')
+  const [tab, setTab] = useState('sessions')
 
   return (
     <div className="px-5 py-5 space-y-4">
@@ -204,20 +204,20 @@ export default function CoachCatalog() {
 
         <div className="flex gap-2 mb-3">
           <button
-            onClick={() => setTab('coaches')}
-            className={`px-3.5 py-1.5 rounded-full text-sm font-medium ${
-              tab === 'coaches' ? 'bg-rink-900 text-white' : 'bg-white border border-ice-300'
-            }`}
-          >
-            Тренеры
-          </button>
-          <button
             onClick={() => setTab('sessions')}
             className={`px-3.5 py-1.5 rounded-full text-sm font-medium ${
               tab === 'sessions' ? 'bg-rink-900 text-white' : 'bg-white border border-ice-300'
             }`}
           >
             Тренировки
+          </button>
+          <button
+            onClick={() => setTab('coaches')}
+            className={`px-3.5 py-1.5 rounded-full text-sm font-medium ${
+              tab === 'coaches' ? 'bg-rink-900 text-white' : 'bg-white border border-ice-300'
+            }`}
+          >
+            Тренеры
           </button>
         </div>
 

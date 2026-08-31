@@ -40,6 +40,12 @@ export function formatSlotDate(dateStr) {
     weekday: 'short',
   })
 }
+export function formatDurationMinutes(minutes) {
+  if (minutes % 60 === 0) return `${minutes / 60} ч`
+  if (minutes < 60) return `${minutes} мин`
+  return `${Math.floor(minutes / 60)} ч ${minutes % 60} мин`
+}
+
 export function age(birthDateIso) {
   const birth = new Date(birthDateIso)
   const today = new Date()

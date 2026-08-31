@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Check, X as XIcon, Trash2, Star } from 'lucide-react'
 import { apiRequest } from '../../api/client'
+import ConfirmModal from '../../components/ConfirmModal'
 import { SESSION_TYPE_LABELS, BOOKING_STATUS_LABELS, BOOKING_STATUS_COLORS, SKILL_LABELS, POSITION_LABELS } from '../../utils/labels'
-import { formatDateTime } from '../../utils/date'
+import { formatDateTime, formatDurationMinutes } from '../../utils/date'
 
 const ATTENDANCE_OPTIONS = [
   { value: 'present', icon: '✅', label: 'Был' },
@@ -246,13 +247,18 @@ export default function SessionDetail() {
     }
   }
 
-  async function handleCancelSession() {
-    if (!confirm('Отменить тренировку? Все записанные получат уведомление.')) return
+  const [cancellingSession, setCancellingSession] = useState(false)
+  const [cancelBusy, setCancelBusy] = useState(false)
+
+  async function handleConfirmCancelSession() {
+    setCancelBusy(true)
     try {
       await apiRequest(`/sessions/${sessionId}`, { method: 'DELETE' })
       navigate('/', { replace: true })
     } catch (err) {
       setError(err.detail || 'Не получилось отменить тренировку')
+      setCancelBusy(false)
+      setCancellingSession(false)
     }
   }
 
@@ -271,7 +277,9 @@ export default function SessionDetail() {
         </button>
         <div>
           <h1 className="font-semibold">{SESSION_TYPE_LABELS[session.type] || session.type}</h1>
-          <p className="text-sm text-neutral-500">{formatDateTime(session.datetime)}</p>
+          <p className="text-sm text-neutral-500">
+            {formatDateTime(session.datetime)} · {formatDurationMinutes(session.duration_minutes)}
+          </p>
         </div>
       </div>
 
@@ -350,12 +358,22 @@ export default function SessionDetail() {
         />
 
         <button
-          onClick={handleCancelSession}
+          onClick={() => setCancellingSession(true)}
           className="flex items-center gap-2 text-sm text-action font-medium pt-4"
         >
           <Trash2 className="w-4 h-4" /> Отменить тренировку
         </button>
       </div>
+
+      {cancellingSession && (
+        <ConfirmModal
+          title="Отменить тренировку?"
+          message="Все записанные родители получат уведомление об отмене."
+          onConfirm={handleConfirmCancelSession}
+          onCancel={() => setCancellingSession(false)}
+          busy={cancelBusy}
+        />
+      )}
     </div>
   )
 }

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Users } from 'lucide-react'
 import { apiRequest } from '../../api/client'
 import { SPECIALIZATION_LABELS, SESSION_TYPE_LABELS } from '../../utils/labels'
-import { formatDateTime } from '../../utils/date'
+import { formatDateTime, formatDurationMinutes } from '../../utils/date'
 import BookSessionModal from '../../components/BookSessionModal'
 
 export default function CoachProfile() {
@@ -95,7 +95,7 @@ export default function CoachProfile() {
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="font-medium">{SESSION_TYPE_LABELS[s.type] || s.type}</p>
-                    <p className="text-sm text-neutral-500">{formatDateTime(s.datetime)}</p>
+                    <p className="text-sm text-neutral-500">{formatDateTime(s.datetime)} · {formatDurationMinutes(s.duration_minutes)}</p>
                     {s.arena_name && <p className="text-xs text-neutral-400 mt-0.5">{s.arena_name}</p>}
                     {s.price != null && (
                       <p className="text-xs text-rink-700 font-medium mt-0.5">

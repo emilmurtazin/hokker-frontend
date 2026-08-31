@@ -1,15 +1,20 @@
 import { useEffect, useState } from 'react'
-import { Plus, MessageCircle, Trash2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Plus, MessageCircle, Trash2, ChevronRight } from 'lucide-react'
 import { apiRequest } from '../../api/client'
 import { POSITION_LABELS } from '../../utils/labels'
 import AddClientModal from '../../components/AddClientModal'
 import MessageParentModal from '../../components/MessageParentModal'
+import ConfirmModal from '../../components/ConfirmModal'
 
 export default function Players() {
+  const navigate = useNavigate()
   const [players, setPlayers] = useState(null)
   const [error, setError] = useState(null)
   const [showAdd, setShowAdd] = useState(false)
   const [messageTarget, setMessageTarget] = useState(null) // { id, parent_name }
+  const [removingPlayer, setRemovingPlayer] = useState(null)
+  const [removeBusy, setRemoveBusy] = useState(false)
 
   function load() {
     apiRequest('/coaches/me/players')
@@ -24,13 +29,16 @@ export default function Players() {
     load()
   }
 
-  async function handleRemove(id) {
-    if (!confirm('Убрать клиента из базы?')) return
+  async function handleConfirmRemove() {
+    setRemoveBusy(true)
     try {
-      await apiRequest(`/coaches/me/players/${id}`, { method: 'DELETE' })
+      await apiRequest(`/coaches/me/players/${removingPlayer.id}`, { method: 'DELETE' })
+      setRemovingPlayer(null)
       load()
     } catch (err) {
       setError(err.detail || 'Не получилось удалить')
+    } finally {
+      setRemoveBusy(false)
     }
   }
 
@@ -62,7 +70,10 @@ export default function Players() {
       <div className="space-y-3">
         {players.map((p) => (
           <div key={p.id} className="card">
-            <div className="flex items-start justify-between">
+            <button
+              onClick={() => navigate(`/players/${p.id}/attendance`)}
+              className="flex items-start justify-between w-full text-left"
+            >
               <div>
                 <p className="font-semibold">{p.player_name}</p>
                 <p className="text-sm text-neutral-500">
@@ -72,8 +83,11 @@ export default function Players() {
                   {p.parent_name} · {p.parent_phone}
                 </p>
               </div>
-              <div className="jersey-stat w-10 h-10 text-sm shrink-0">{p.sessions_count}</div>
-            </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="jersey-stat w-10 h-10 text-sm">{p.sessions_count}</div>
+                <ChevronRight className="w-4 h-4 text-neutral-300" />
+              </div>
+            </button>
 
             <div className="flex items-center gap-3 mt-3 text-xs text-neutral-500">
               <span>✅ {p.attendance.present}</span>
@@ -90,7 +104,7 @@ export default function Players() {
                 <MessageCircle className="w-4 h-4" /> Написать
               </button>
               <button
-                onClick={() => handleRemove(p.id)}
+                onClick={() => setRemovingPlayer(p)}
                 className="p-2.5 text-neutral-400 border border-ice-300 rounded-card"
               >
                 <Trash2 className="w-4 h-4" />
@@ -106,6 +120,15 @@ export default function Players() {
           coachPlayerId={messageTarget.id}
           parentName={messageTarget.parent_name}
           onClose={() => setMessageTarget(null)}
+        />
+      )}
+      {removingPlayer && (
+        <ConfirmModal
+          title="Убрать клиента из базы?"
+          message={`«${removingPlayer.player_name}» пропадёт из вашей клиентской базы.`}
+          onConfirm={handleConfirmRemove}
+          onCancel={() => setRemovingPlayer(null)}
+          busy={removeBusy}
         />
       )}
     </div>

@@ -3,7 +3,7 @@ import { CalendarX, Check } from 'lucide-react'
 import { apiRequest } from '../../api/client'
 import { useChildren } from '../../hooks/useChildren'
 import { SESSION_TYPE_LABELS, BOOKING_STATUS_LABELS, BOOKING_STATUS_COLORS } from '../../utils/labels'
-import { formatDateTime } from '../../utils/date'
+import { formatDateTime, formatDurationMinutes } from '../../utils/date'
 
 export default function Schedule() {
   const { children } = useChildren()
@@ -37,6 +37,7 @@ export default function Schedule() {
       const merged = allBookings
         .map((b) => ({ booking: b, session: sessionById[b.session_id] }))
         .filter((item) => item.session)
+        .filter((item) => new Date(item.session.datetime) >= new Date())
         .sort((a, b) => new Date(a.session.datetime) - new Date(b.session.datetime))
 
       setItems(merged)
@@ -98,7 +99,7 @@ export default function Schedule() {
               <div className="flex items-start justify-between mb-2">
                 <div>
                   <p className="font-medium">{SESSION_TYPE_LABELS[session.type] || session.type}</p>
-                  <p className="text-sm text-neutral-500">{formatDateTime(session.datetime)}</p>
+                  <p className="text-sm text-neutral-500">{formatDateTime(session.datetime)} · {formatDurationMinutes(session.duration_minutes)}</p>
                   <p className="text-xs text-neutral-400 mt-0.5">{booking.childName}</p>
                 </div>
                 <span

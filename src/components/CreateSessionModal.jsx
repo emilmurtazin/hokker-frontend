@@ -14,6 +14,7 @@ export default function CreateSessionModal({ onClose, onCreated }) {
   const [type, setType] = useState('ice')
   const [visibility, setVisibility] = useState('open')
   const [datetimeLocal, setDatetimeLocal] = useState('')
+  const [durationMinutes, setDurationMinutes] = useState(60)
   const [arenaName, setArenaName] = useState('')
   const [maxPlayers, setMaxPlayers] = useState(10)
   const [price, setPrice] = useState('')
@@ -35,6 +36,7 @@ export default function CreateSessionModal({ onClose, onCreated }) {
           type,
           visibility,
           datetime: isoDatetime,
+          duration_minutes: Number(durationMinutes),
           arena_name: arenaName || null,
           max_players: Number(maxPlayers),
           price: price === '' ? null : Number(price),
@@ -100,7 +102,7 @@ export default function CreateSessionModal({ onClose, onCreated }) {
           </label>
 
           <label className="block">
-            <span className="block text-sm font-medium mb-1.5">Дата и время</span>
+            <span className="block text-sm font-medium mb-1.5">Дата и время начала</span>
             <input
               type="datetime-local"
               required
@@ -109,6 +111,21 @@ export default function CreateSessionModal({ onClose, onCreated }) {
               onChange={(e) => setDatetimeLocal(e.target.value)}
               className="input-field"
             />
+          </label>
+
+          <label className="block">
+            <span className="block text-sm font-medium mb-1.5">Продолжительность</span>
+            <select
+              value={durationMinutes}
+              onChange={(e) => setDurationMinutes(e.target.value)}
+              className="input-field"
+            >
+              <option value="30">30 минут</option>
+              <option value="45">45 минут</option>
+              <option value="60">1 час</option>
+              <option value="90">1,5 часа</option>
+              <option value="120">2 часа</option>
+            </select>
           </label>
 
           <label className="block">
