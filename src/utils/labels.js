@@ -32,6 +32,8 @@ export const SLOT_REQUEST_STATUS_COLORS = {
   rejected: 'text-neutral-400 bg-ice-100',
   cancelled_by_coach: 'text-neutral-400 bg-ice-100',
 }
+export const AGE_GROUPS = ['6-9', '10-12', '13+']
+
 export const SPECIALIZATION_LABELS = {
   skating: 'Катание',
   shooting: 'Броски',

@@ -64,7 +64,7 @@ export default function CoachProfile() {
         <div>
           <h1 className="font-semibold">{profile.name}</h1>
           <p className="text-sm text-neutral-500">
-            {SPECIALIZATION_LABELS[profile.specialization] || profile.specialization}
+            {profile.specializations?.map((s) => SPECIALIZATION_LABELS[s] || s).join(', ')}
             {profile.experience_years != null && ` · ${profile.experience_years} лет опыта`}
           </p>
         </div>

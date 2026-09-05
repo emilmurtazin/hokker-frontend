@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import { apiRequest } from '../api/client'
 import { SESSION_TYPE_LABELS } from '../utils/labels'
@@ -10,6 +10,8 @@ function localDatetimeNow() {
   return local.toISOString().slice(0, 16)
 }
 
+const STANDARD_DURATIONS = [30, 45, 60, 90, 120]
+
 export default function CreateSessionModal({ onClose, onCreated }) {
   const [type, setType] = useState('ice')
   const [visibility, setVisibility] = useState('open')
@@ -20,6 +22,43 @@ export default function CreateSessionModal({ onClose, onCreated }) {
   const [price, setPrice] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
+  const [bookedSlots, setBookedSlots] = useState([])
+
+  useEffect(() => {
+    // Заявки на лёд, которые арена уже подтвердила — тренер может выбрать
+    // один из таких слотов, чтобы не вбивать каток/время вручную.
+    apiRequest('/coaches/me/ice-requests')
+      .then((rows) => {
+        const now = new Date()
+        const approved = rows.filter((r) => {
+          if (r.status !== 'approved') return false
+          const slotStart = new Date(`${r.slot.date}T${r.slot.time_start}`)
+          return slotStart >= now
+        })
+        setBookedSlots(approved)
+      })
+      .catch(() => setBookedSlots([]))
+  }, [])
+
+  function handlePickSlot(requestId) {
+    if (!requestId) return
+    const req = bookedSlots.find((r) => String(r.id) === requestId)
+    if (!req) return
+
+    setArenaName(req.slot.arena_name)
+
+    const start = new Date(`${req.slot.date}T${req.slot.time_start}`)
+    const offset = start.getTimezoneOffset()
+    const local = new Date(start.getTime() - offset * 60000)
+    setDatetimeLocal(local.toISOString().slice(0, 16))
+
+    const [sh, sm] = req.slot.time_start.split(':').map(Number)
+    const [eh, em] = req.slot.time_end.split(':').map(Number)
+    const computedDuration = eh * 60 + em - (sh * 60 + sm)
+    if (STANDARD_DURATIONS.includes(computedDuration)) {
+      setDurationMinutes(computedDuration)
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -127,6 +166,27 @@ export default function CreateSessionModal({ onClose, onCreated }) {
               <option value="120">2 часа</option>
             </select>
           </label>
+
+          {bookedSlots.length > 0 && (
+            <label className="block">
+              <span className="block text-sm font-medium mb-1.5">
+                Выбрать из забронированного льда
+              </span>
+              <select
+                defaultValue=""
+                onChange={(e) => handlePickSlot(e.target.value)}
+                className="input-field"
+              >
+                <option value="">Не выбрано — заполнить вручную</option>
+                {bookedSlots.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.slot.arena_name} — {r.slot.date}, {r.slot.time_start.slice(0, 5)}–
+                    {r.slot.time_end.slice(0, 5)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
 
           <label className="block">
             <span className="block text-sm font-medium mb-1.5">Каток (необязательно)</span>

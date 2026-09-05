@@ -5,20 +5,14 @@ import { ICE_TYPE_LABELS } from '../utils/labels'
 
 export default function CreateSlotModal({ onClose, onCreated }) {
   const [date, setDate] = useState('')
-  const [timeStart, setTimeStart] = useState('')
-  const [timeEnd, setTimeEnd] = useState('')
+  // Предлагаем :00 по умолчанию, но не фиксируем — пользователь может
+  // свободно выбрать любые минуты, если нужно (например, 18:30).
+  const [timeStart, setTimeStart] = useState('10:00')
+  const [timeEnd, setTimeEnd] = useState('11:00')
   const [iceType, setIceType] = useState('full')
   const [price, setPrice] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
-
-  // Минуты всегда 00 — какой бы час ни выбрали (пикером или вручную),
-  // отбрасываем минуты, чтобы слоты всегда начинались ровно в час.
-  function toWholeHour(value) {
-    if (!value) return value
-    const [hours] = value.split(':')
-    return `${hours}:00`
-  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -70,10 +64,9 @@ export default function CreateSlotModal({ onClose, onCreated }) {
               <span className="block text-sm font-medium mb-1.5">Начало</span>
               <input
                 type="time"
-                step="3600"
                 required
                 value={timeStart}
-                onChange={(e) => setTimeStart(toWholeHour(e.target.value))}
+                onChange={(e) => setTimeStart(e.target.value)}
                 className="input-field"
               />
             </label>
@@ -81,10 +74,9 @@ export default function CreateSlotModal({ onClose, onCreated }) {
               <span className="block text-sm font-medium mb-1.5">Конец</span>
               <input
                 type="time"
-                step="3600"
                 required
                 value={timeEnd}
-                onChange={(e) => setTimeEnd(toWholeHour(e.target.value))}
+                onChange={(e) => setTimeEnd(e.target.value)}
                 className="input-field"
               />
             </label>

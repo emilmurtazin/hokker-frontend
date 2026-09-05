@@ -11,6 +11,7 @@ export default function ArenaProfileForm({ initial, onSaved, onCancel }) {
   const [city, setCity] = useState(initial?.city || '')
   const [iceSize, setIceSize] = useState(initial?.ice_size || '')
   const [lockerRooms, setLockerRooms] = useState(initial?.locker_rooms ?? '')
+  const [contactPhone, setContactPhone] = useState(initial?.contact_phone || '')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
 
@@ -30,6 +31,7 @@ export default function ArenaProfileForm({ initial, onSaved, onCancel }) {
           city: city || null,
           ice_size: iceSize || null,
           locker_rooms: lockerRooms === '' ? null : Number(lockerRooms),
+          contact_phone: contactPhone || null,
         },
       })
       onSaved(arena)
@@ -125,6 +127,20 @@ export default function ArenaProfileForm({ initial, onSaved, onCancel }) {
             onChange={(e) => setLockerRooms(e.target.value)}
             className="input-field"
             placeholder="4"
+          />
+        </label>
+
+        <label className="block">
+          <span className="block text-sm font-medium mb-1.5">
+            Контактный телефон для тренеров{' '}
+            <span className="text-neutral-400 font-normal">(необязательно)</span>
+          </span>
+          <input
+            type="tel"
+            value={contactPhone}
+            onChange={(e) => setContactPhone(e.target.value)}
+            className="input-field"
+            placeholder="Если отличается от номера входа"
           />
         </label>
 

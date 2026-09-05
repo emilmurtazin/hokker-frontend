@@ -1,28 +1,36 @@
 import { useState } from 'react'
 import { apiRequest } from '../../api/client'
-import { SPECIALIZATION_LABELS } from '../../utils/labels'
+import { SPECIALIZATION_LABELS, AGE_GROUPS } from '../../utils/labels'
+
+function toggleInArray(array, value) {
+  return array.includes(value) ? array.filter((v) => v !== value) : [...array, value]
+}
 
 export default function CoachProfileForm({ initial, onSaved, onCancel }) {
-  const [specialization, setSpecialization] = useState(initial?.specialization || 'general')
+  const [specializations, setSpecializations] = useState(initial?.specializations || [])
+  const [ageGroups, setAgeGroups] = useState(initial?.age_groups || [])
   const [experienceYears, setExperienceYears] = useState(initial?.experience_years ?? '')
   const [about, setAbout] = useState(initial?.about || '')
-  const [ageGroups, setAgeGroups] = useState(initial?.age_groups || '')
   const [visibleInSearch, setVisibleInSearch] = useState(initial?.visible_in_search ?? true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
 
   async function handleSubmit(e) {
     e.preventDefault()
+    if (specializations.length === 0) {
+      setError('Выберите хотя бы одну специализацию')
+      return
+    }
     setBusy(true)
     setError(null)
     try {
       const profile = await apiRequest('/coaches/me/profile', {
         method: 'POST',
         body: {
-          specialization,
+          specializations,
           experience_years: experienceYears === '' ? null : Number(experienceYears),
           about: about || null,
-          age_groups: ageGroups || null,
+          age_groups: ageGroups,
           visible_in_search: visibleInSearch,
         },
       })
@@ -46,20 +54,31 @@ export default function CoachProfileForm({ initial, onSaved, onCancel }) {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <label className="block">
-          <span className="block text-sm font-medium mb-1.5">Специализация</span>
-          <select
-            value={specialization}
-            onChange={(e) => setSpecialization(e.target.value)}
-            className="input-field"
-          >
-            {Object.entries(SPECIALIZATION_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div>
+          <span className="block text-sm font-medium mb-1.5">
+            Специализация <span className="text-neutral-400 font-normal">(можно несколько)</span>
+          </span>
+          <div className="grid grid-cols-2 gap-2">
+            {Object.entries(SPECIALIZATION_LABELS).map(([value, label]) => {
+              const checked = specializations.includes(value)
+              return (
+                <label
+                  key={value}
+                  className={`flex items-center gap-2 p-2.5 rounded-card border text-sm cursor-pointer ${
+                    checked ? 'border-rink-900 bg-rink-900/[0.03]' : 'border-ice-300'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => setSpecializations((prev) => toggleInArray(prev, value))}
+                  />
+                  {label}
+                </label>
+              )
+            })}
+          </div>
+        </div>
 
         <label className="block">
           <span className="block text-sm font-medium mb-1.5">Опыт работы (лет)</span>
@@ -74,16 +93,31 @@ export default function CoachProfileForm({ initial, onSaved, onCancel }) {
           />
         </label>
 
-        <label className="block">
-          <span className="block text-sm font-medium mb-1.5">Возрастные группы</span>
-          <input
-            type="text"
-            value={ageGroups}
-            onChange={(e) => setAgeGroups(e.target.value)}
-            className="input-field"
-            placeholder="6-9, 10-12, 13+"
-          />
-        </label>
+        <div>
+          <span className="block text-sm font-medium mb-1.5">
+            Возрастные группы <span className="text-neutral-400 font-normal">(можно несколько)</span>
+          </span>
+          <div className="flex gap-2">
+            {AGE_GROUPS.map((value) => {
+              const checked = ageGroups.includes(value)
+              return (
+                <label
+                  key={value}
+                  className={`flex-1 flex items-center justify-center gap-1.5 p-2.5 rounded-card border text-sm cursor-pointer ${
+                    checked ? 'border-rink-900 bg-rink-900/[0.03]' : 'border-ice-300'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => setAgeGroups((prev) => toggleInArray(prev, value))}
+                  />
+                  {value}
+                </label>
+              )
+            })}
+          </div>
+        </div>
 
         <label className="block">
           <span className="block text-sm font-medium mb-1.5">О себе</span>

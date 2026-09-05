@@ -70,6 +70,16 @@ function Catalog() {
           <div key={s.id} className="card">
             <p className="font-medium">{s.arena_name}</p>
             <p className="text-xs text-neutral-400">{s.arena_address}</p>
+            {(s.arena_ice_size || s.arena_locker_rooms != null) && (
+              <p className="text-xs text-neutral-400 mt-0.5">
+                {s.arena_ice_size && `Лёд: ${s.arena_ice_size}`}
+                {s.arena_ice_size && s.arena_locker_rooms != null && ' · '}
+                {s.arena_locker_rooms != null && `Раздевалок: ${s.arena_locker_rooms}`}
+              </p>
+            )}
+            {s.arena_phone && (
+              <p className="text-xs text-rink-700 mt-0.5">📞 {s.arena_phone}</p>
+            )}
             <p className="text-sm text-neutral-600 mt-1 capitalize">
               {formatSlotDate(s.date)}, {formatSlotTime(s.time_start)}–{formatSlotTime(s.time_end)}
             </p>
@@ -135,6 +145,9 @@ function MyRequests() {
                 {formatSlotDate(r.slot.date)}, {formatSlotTime(r.slot.time_start)}–
                 {formatSlotTime(r.slot.time_end)}
               </p>
+              {r.slot.arena_phone && (
+                <p className="text-xs text-rink-700 mt-0.5">📞 {r.slot.arena_phone}</p>
+              )}
             </div>
             <span
               className={`text-xs px-2 py-1 rounded-full font-medium shrink-0 ${SLOT_REQUEST_STATUS_COLORS[r.status]}`}

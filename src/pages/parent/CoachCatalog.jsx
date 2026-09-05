@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { MapPin, ChevronRight, SlidersHorizontal } from 'lucide-react'
 import { apiRequest } from '../../api/client'
 import { useAuth } from '../../context/AuthContext'
-import { SPECIALIZATION_LABELS, SESSION_TYPE_LABELS } from '../../utils/labels'
-import { formatDateTime } from '../../utils/date'
+import { SPECIALIZATION_LABELS, SESSION_TYPE_LABELS, AGE_GROUPS } from '../../utils/labels'
+import { formatDateTime, formatDurationMinutes } from '../../utils/date'
 import BookSessionModal from '../../components/BookSessionModal'
 
 function CoachesList({ city, specialization, ageGroup }) {
@@ -62,7 +62,9 @@ function CoachesList({ city, specialization, ageGroup }) {
             <div className="min-w-0 flex-1">
               <p className="font-semibold truncate">{coach.name}</p>
               <p className="text-sm text-neutral-500">
-                {SPECIALIZATION_LABELS[coach.specialization] || coach.specialization}
+                {coach.specializations
+                  ?.map((s) => SPECIALIZATION_LABELS[s] || s)
+                  .join(', ')}
                 {coach.experience_years != null && ` · ${coach.experience_years} лет опыта`}
               </p>
               {coach.next_open_sessions?.length > 0 ? (
@@ -84,7 +86,7 @@ function CoachesList({ city, specialization, ageGroup }) {
   )
 }
 
-function TrainingsFeed({ city }) {
+function TrainingsFeed({ city, specialization, ageGroup }) {
   const [sessions, setSessions] = useState(null)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -97,13 +99,16 @@ function TrainingsFeed({ city }) {
     }
     setLoading(true)
     setError(null)
-    apiRequest(`/sessions?${new URLSearchParams({ city }).toString()}`)
+    const params = new URLSearchParams({ city })
+    if (specialization) params.set('specialization', specialization)
+    if (ageGroup) params.set('age_group', ageGroup)
+    apiRequest(`/sessions?${params.toString()}`)
       .then((data) => setSessions(data.items))
       .catch((err) => setError(err.detail || 'Не получилось загрузить тренировки'))
       .finally(() => setLoading(false))
   }
 
-  useEffect(load, [city])
+  useEffect(load, [city, specialization, ageGroup])
 
   async function handleBook(childId) {
     const booking = await apiRequest(`/sessions/${bookingSession.id}/bookings`, {
@@ -128,7 +133,8 @@ function TrainingsFeed({ city }) {
       {loading && <p className="text-sm text-neutral-400 text-center py-6">Ищем тренировки…</p>}
       {sessions && !loading && sessions.length === 0 && (
         <p className="text-sm text-neutral-500 text-center py-8">
-          В городе «{city}» пока нет открытых тренировок.
+          В городе «{city}» пока нет открытых тренировок
+          {specialization || ageGroup ? ' с такими фильтрами' : ''}.
         </p>
       )}
 
@@ -138,7 +144,9 @@ function TrainingsFeed({ city }) {
           return (
             <div key={s.id} className="card">
               <p className="font-medium">{SESSION_TYPE_LABELS[s.type] || s.type}</p>
-              <p className="text-sm text-neutral-500">{formatDateTime(s.datetime)}</p>
+              <p className="text-sm text-neutral-500">
+                {formatDateTime(s.datetime)} · {formatDurationMinutes(s.duration_minutes)}
+              </p>
               <p className="text-xs text-neutral-400 mt-0.5">
                 Тренер: {s.coach_name}
                 {s.arena_name && ` · ${s.arena_name}`}
@@ -178,8 +186,6 @@ function TrainingsFeed({ city }) {
     </>
   )
 }
-
-const AGE_GROUPS = ['6-9', '10-12', '13+']
 
 export default function CoachCatalog() {
   const { user } = useAuth()
@@ -221,61 +227,59 @@ export default function CoachCatalog() {
           </button>
         </div>
 
-        {tab === 'coaches' && (
-          <>
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1 mb-2">
-              <SlidersHorizontal className="w-4 h-4 text-neutral-400 shrink-0" />
-              <button
-                onClick={() => setSpecialization('')}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                  specialization === '' ? 'bg-rink-900 text-white' : 'bg-white border border-ice-300'
-                }`}
-              >
-                Все
-              </button>
-              {Object.entries(SPECIALIZATION_LABELS).map(([value, label]) => (
-                <button
-                  key={value}
-                  onClick={() => setSpecialization(value)}
-                  className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                    specialization === value ? 'bg-rink-900 text-white' : 'bg-white border border-ice-300'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+        {/* Фильтры общие для обеих вкладок — категоризация тренировок
+            работает так же, как и каталог тренеров. */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1 mb-2">
+          <SlidersHorizontal className="w-4 h-4 text-neutral-400 shrink-0" />
+          <button
+            onClick={() => setSpecialization('')}
+            className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              specialization === '' ? 'bg-rink-900 text-white' : 'bg-white border border-ice-300'
+            }`}
+          >
+            Все
+          </button>
+          {Object.entries(SPECIALIZATION_LABELS).map(([value, label]) => (
+            <button
+              key={value}
+              onClick={() => setSpecialization(value)}
+              className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                specialization === value ? 'bg-rink-900 text-white' : 'bg-white border border-ice-300'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-              <span className="text-xs text-neutral-400 shrink-0 w-5 text-center">🎂</span>
-              <button
-                onClick={() => setAgeGroup('')}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                  ageGroup === '' ? 'bg-rink-900 text-white' : 'bg-white border border-ice-300'
-                }`}
-              >
-                Любой возраст
-              </button>
-              {AGE_GROUPS.map((value) => (
-                <button
-                  key={value}
-                  onClick={() => setAgeGroup(value)}
-                  className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                    ageGroup === value ? 'bg-rink-900 text-white' : 'bg-white border border-ice-300'
-                  }`}
-                >
-                  {value}
-                </button>
-              ))}
-            </div>
-          </>
-        )}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+          <span className="text-xs text-neutral-400 shrink-0 w-5 text-center">🎂</span>
+          <button
+            onClick={() => setAgeGroup('')}
+            className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              ageGroup === '' ? 'bg-rink-900 text-white' : 'bg-white border border-ice-300'
+            }`}
+          >
+            Любой возраст
+          </button>
+          {AGE_GROUPS.map((value) => (
+            <button
+              key={value}
+              onClick={() => setAgeGroup(value)}
+              className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                ageGroup === value ? 'bg-rink-900 text-white' : 'bg-white border border-ice-300'
+              }`}
+            >
+              {value}
+            </button>
+          ))}
+        </div>
       </div>
 
       {tab === 'coaches' ? (
         <CoachesList city={city} specialization={specialization} ageGroup={ageGroup} />
       ) : (
-        <TrainingsFeed city={city} />
+        <TrainingsFeed city={city} specialization={specialization} ageGroup={ageGroup} />
       )}
     </div>
   )

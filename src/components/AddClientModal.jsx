@@ -4,8 +4,12 @@ import { apiRequest } from '../api/client'
 import { POSITION_LABELS } from '../utils/labels'
 import { age } from '../utils/date'
 
+function digitsOnly(value) {
+  return value.replace(/\D/g, '')
+}
+
 export default function AddClientModal({ onClose, onAdded }) {
-  const [phone, setPhone] = useState('')
+  const [phoneDigits, setPhoneDigits] = useState('')
   const [searching, setSearching] = useState(false)
   const [searchError, setSearchError] = useState(null)
   const [found, setFound] = useState(null) // { parent_name, children: [...] }
@@ -13,11 +17,15 @@ export default function AddClientModal({ onClose, onAdded }) {
 
   async function handleSearch(e) {
     e.preventDefault()
+    if (phoneDigits.length !== 10) {
+      setSearchError('Введите корректный номер телефона — 10 цифр после +7')
+      return
+    }
     setSearching(true)
     setSearchError(null)
     setFound(null)
     try {
-      const data = await apiRequest(`/coaches/lookup-parent?phone=${encodeURIComponent(phone)}`)
+      const data = await apiRequest(`/coaches/lookup-parent?phone=${encodeURIComponent(`+7${phoneDigits}`)}`)
       setFound(data)
     } catch (err) {
       setSearchError(err.detail || 'Родитель с таким телефоном не найден')
@@ -53,16 +61,20 @@ export default function AddClientModal({ onClose, onAdded }) {
         </p>
 
         <form onSubmit={handleSearch} className="flex gap-2 mb-4">
-          <input
-            type="tel"
-            required
-            autoFocus
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="+7 999 123-45-67"
-            className="input-field flex-1"
-          />
-          <button type="submit" disabled={searching} className="btn-primary px-4">
+          <div className="flex items-center input-field flex-1 gap-1">
+            <span className="text-neutral-500 select-none">+7</span>
+            <input
+              type="tel"
+              required
+              autoFocus
+              inputMode="numeric"
+              value={phoneDigits}
+              onChange={(e) => setPhoneDigits(digitsOnly(e.target.value).slice(0, 10))}
+              placeholder="9991234567"
+              className="flex-1 bg-transparent outline-none min-w-0"
+            />
+          </div>
+          <button type="submit" disabled={searching || phoneDigits.length !== 10} className="btn-primary px-4">
             <Search className="w-4 h-4" />
           </button>
         </form>
