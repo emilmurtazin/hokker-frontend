@@ -7,10 +7,10 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['favicon.png', 'logo-icon.png'],
       manifest: {
-        name: 'ХОККЕР — Школа хоккея',
-        short_name: 'ХОККЕР',
+        name: '24hokker.ru — Школа хоккея',
+        short_name: '24hokker.ru',
         description: 'Платформа для тренеров, родителей и арен',
         theme_color: '#0B2545',
         background_color: '#F0F4F8',

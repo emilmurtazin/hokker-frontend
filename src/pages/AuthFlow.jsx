@@ -92,8 +92,8 @@ export default function AuthFlow() {
     <div className="min-h-screen flex flex-col justify-center px-6 py-10">
       <div className="max-w-sm mx-auto w-full">
         <div className="mb-8 text-center">
-          <div className="jersey-stat w-14 h-14 text-2xl mx-auto mb-3">Х</div>
-          <h1 className="text-3xl font-semibold tracking-tight">ХОККЕР</h1>
+          <img src="/logo-icon.png" alt="24hokker.ru" className="w-16 h-16 mx-auto mb-3" />
+          <h1 className="text-3xl font-semibold tracking-tight">24hokker.ru</h1>
           <p className="text-neutral-500 mt-1">Школа хоккея — тренеры, родители, арены</p>
         </div>
 

@@ -34,6 +34,12 @@ export const SLOT_REQUEST_STATUS_COLORS = {
 }
 export const AGE_GROUPS = ['6-9', '10-12', '13+']
 
+export const LOCATION_LABELS = {
+  on_ice: { label: 'На льду', icon: '🧊' },
+  gym: { label: 'В зале', icon: '🏋️' },
+  off_ice: { label: 'Вне льда', icon: '🏠' },
+}
+
 export const SPECIALIZATION_LABELS = {
   skating: 'Катание',
   shooting: 'Броски',

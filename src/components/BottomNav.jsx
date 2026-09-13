@@ -7,13 +7,14 @@ const TABS_BY_ROLE = {
   parent: [
     { to: '/', icon: Search, label: 'Тренеры' },
     { to: '/schedule', icon: CalendarDays, label: 'Расписание', badgeKey: 'invited' },
-    { to: '/exercises', icon: PlayCircle, label: 'Видео' },
+    { to: '/exercises', icon: PlayCircle, label: 'Упражнения' },
     { to: '/profile', icon: User, label: 'Профиль', badgeKey: 'invites' },
   ],
   coach: [
     { to: '/', icon: CalendarDays, label: 'Тренировки', badgeKey: 'pending' },
     { to: '/players', icon: Users, label: 'Клиенты' },
     { to: '/ice', icon: Snowflake, label: 'Лёд' },
+    { to: '/exercises', icon: PlayCircle, label: 'Упражнения' },
     { to: '/profile', icon: User, label: 'Профиль' },
   ],
   arena_admin: [
