@@ -184,10 +184,21 @@ export default function Profile() {
   async function handleTelegramLink() {
     setLinking(true)
     setLinkError(null)
+    // Окно открываем СРАЗУ, в обработчике клика, и только потом подставляем
+    // ссылку. Если вызвать window.open после await, iOS Safari и часть
+    // мобильных браузеров считают это всплывающим окном не по клику и
+    // блокируют его — кнопка выглядит «мёртвой».
+    const popup = window.open('', '_blank')
     try {
       const data = await apiRequest('/telegram/link')
-      window.open(data.deep_link, '_blank')
+      if (popup) {
+        popup.location.href = data.deep_link
+      } else {
+        // Окно не открылось (PWA, блокировщик) — переходим в этой же вкладке.
+        window.location.href = data.deep_link
+      }
     } catch (err) {
+      popup?.close()
       setLinkError(err instanceof ApiError ? err.detail : 'Не получилось получить ссылку')
     } finally {
       setLinking(false)

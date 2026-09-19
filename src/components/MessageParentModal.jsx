@@ -47,6 +47,7 @@ export default function MessageParentModal({ coachPlayerId, parentName, onClose 
             <textarea
               required
               autoFocus
+              maxLength={2000}
               value={text}
               onChange={(e) => setText(e.target.value)}
               className="input-field min-h-[100px] resize-none"

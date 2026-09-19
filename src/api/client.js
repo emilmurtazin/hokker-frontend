@@ -85,7 +85,11 @@ export async function apiRequest(path, { method = 'GET', body, auth = true, retr
   }
 
   if (!res.ok) {
-    throw new ApiError(res.status, data?.detail || 'Что-то пошло не так')
+    // При ошибке валидации (422) FastAPI отдаёт detail массивом объектов, а не
+    // строкой. Экраны показывают detail прямо в JSX — объект там роняет всё
+    // приложение, поэтому приводим к строке.
+    const detail = Array.isArray(data?.detail) ? 'Проверьте введённые данные' : data?.detail
+    throw new ApiError(res.status, detail || 'Что-то пошло не так')
   }
   return data
 }
