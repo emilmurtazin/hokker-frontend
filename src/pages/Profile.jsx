@@ -18,6 +18,22 @@ const ROLE_LABELS = {
   admin: 'Администратор платформы',
 }
 
+// https://t.me/Hokker_bot?start=XYZ  →  tg://resolve?domain=Hokker_bot&start=XYZ
+// Прямая схема приложения: браузер не участвует, блокировки РФ ни при чём.
+function toTgScheme(httpsLink) {
+  try {
+    const url = new URL(httpsLink)
+    if (url.hostname !== 't.me') return null
+    const domain = url.pathname.replace(/^\//, '')
+    const start = url.searchParams.get('start')
+    let tg = `tg://resolve?domain=${domain}`
+    if (start) tg += `&start=${start}`
+    return tg
+  } catch {
+    return null
+  }
+}
+
 function InvitesSection() {
   const [invites, setInvites] = useState(null)
   const [busyId, setBusyId] = useState(null)
@@ -175,30 +191,14 @@ function ChildrenSection() {
   )
 }
 
-// Преобразует https://t.me/Hokker_bot?start=XYZ  →  tg://resolve?domain=Hokker_bot&start=XYZ
-function toTgScheme(httpsLink) {
-  try {
-    const url = new URL(httpsLink)
-    if (url.hostname !== 't.me') return null
-    const domain = url.pathname.replace(/^\//, '')
-    const start = url.searchParams.get('start')
-    let tg = `tg://resolve?domain=${domain}`
-    if (start) tg += `&start=${start}`
-    return tg
-  } catch {
-    return null
-  }
-}
-
 export default function Profile() {
   const { user, logout } = useAuth()
   const [deepLink, setDeepLink] = useState(null)
   const [linkError, setLinkError] = useState(null)
   const [editingProfile, setEditingProfile] = useState(false)
 
-  // Ссылку получаем заранее, при заходе на профиль. К моменту клика
-  // она уже готова — значит, переход сработает нативной навигацией браузера,
-  // без «пустой вкладки» и без popup-блокировок.
+  // Ссылку получаем заранее — при заходе на профиль. К моменту клика
+  // она уже готова: значит переход сработает мгновенно, без «висит запрос».
   useEffect(() => {
     let cancelled = false
     apiRequest('/telegram/link')
@@ -217,28 +217,34 @@ export default function Profile() {
     }
   }, [])
 
-  // Клик по кнопке. Сначала пробуем https://t.me (Universal Link, работает
-  // почти везде). Если через 1.5 секунды страница всё ещё видима — значит
-  // Telegram не перехватил ссылку (WebView / PWA / нет приложения),
-  // и мы пробуем tg://. Для PWA на iOS это часто единственный рабочий путь.
-  function handleTelegramClick(e) {
+  // Клик по кнопке. Никаких window.open и пустых вкладок:
+  // 1. Пробуем tg:// — прямая схема приложения, минует браузер.
+  // 2. Если через 1.5 c всё ещё на странице — откатываемся на https://t.me.
+  function handleTelegramClick() {
     if (!deepLink) return
     const tgLink = toTgScheme(deepLink)
-    if (!tgLink) return  // дадим <a> отработать самому
 
     let navigated = false
-    const onVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        navigated = true
-      }
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') navigated = true
     }
-    document.addEventListener('visibilitychange', onVisibilityChange)
+    document.addEventListener('visibilitychange', onVisibility)
+
+    if (tgLink) {
+      window.location.href = tgLink
+    } else {
+      // Ссылка не распарсилась — сразу https://t.me
+      navigated = true
+      window.location.href = deepLink
+      return
+    }
 
     setTimeout(() => {
-      document.removeEventListener('visibilitychange', onVisibilityChange)
+      document.removeEventListener('visibilitychange', onVisibility)
       if (!navigated) {
-        // Не ушли в приложение — пробуем tg://.
-        window.location.href = tgLink
+        // Telegram не открылся (не установлен / WebView заблокировал tg://).
+        // Открываем страницу-приглашение t.me.
+        window.location.href = deepLink
       }
     }, 1500)
   }
@@ -275,10 +281,10 @@ export default function Profile() {
 
       <div className="card">
         {deepLink ? (
-          // Настоящий <a href> — нативная навигация. Плюс onClick-фолбэк на tg://.
+          // Обычная <a href>: не открывает пустых вкладок, работает как
+          // нативная навигация. onClick добавляет fallback на tg://.
           <a
             href={deepLink}
-            target="_blank"
             rel="noopener noreferrer"
             onClick={handleTelegramClick}
             className="flex items-center gap-3 w-full text-left"
