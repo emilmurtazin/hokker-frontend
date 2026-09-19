@@ -28,7 +28,6 @@ export default function AuthFlow() {
   const [city, setCity] = useState('')
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
-  const [debugCode, setDebugCode] = useState(null) // видно только в local-окружении бэкенда
   const [smsWarning, setSmsWarning] = useState(null)
 
   async function handlePhoneSubmit(e) {
@@ -45,7 +44,6 @@ export default function AuthFlow() {
     try {
       const data = await requestCode(`+7${phoneDigits}`)
       setRequestId(data.request_id)
-      setDebugCode(data.debug_code || null)
       setSmsWarning(data.warning || null)
       setStep('code')
     } catch (err) {
@@ -162,11 +160,6 @@ export default function AuthFlow() {
                   className="input-field pl-11 tracking-[0.3em] font-stat text-lg"
                 />
               </div>
-              {debugCode && (
-                <p className="text-xs text-neutral-400 mt-1.5">
-                  Тестовый режим сервера: код {debugCode}
-                </p>
-              )}
             </label>
             {error && <p className="text-action text-sm">{error}</p>}
             <button type="submit" disabled={busy || !code} className="btn-primary w-full">
