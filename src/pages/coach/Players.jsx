@@ -19,7 +19,7 @@ export default function Players() {
   function load() {
     apiRequest('/coaches/me/players')
       .then(setPlayers)
-      .catch((err) => setError(err.detail || 'Не получилось загрузить клиентов'))
+      .catch((err) => setError(err.detail || 'Не получилось загрузить учеников'))
   }
 
   useEffect(load, [])
@@ -49,7 +49,7 @@ export default function Players() {
   return (
     <div className="px-5 py-5 space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Клиенты</h1>
+        <h1 className="text-xl font-semibold">Ученики</h1>
         <button
           onClick={() => setShowAdd(true)}
           className="flex items-center gap-1.5 btn-primary py-2 px-3.5 text-sm"
@@ -62,7 +62,7 @@ export default function Players() {
 
       {players.length === 0 && (
         <p className="text-sm text-neutral-500 text-center py-8">
-          Пока нет клиентов. Они появятся сами после первой записи на тренировку,
+          Пока нет учеников. Они появятся сами после первой записи на тренировку,
           либо добавьте вручную по номеру телефона.
         </p>
       )}
@@ -124,8 +124,8 @@ export default function Players() {
       )}
       {removingPlayer && (
         <ConfirmModal
-          title="Убрать клиента из базы?"
-          message={`«${removingPlayer.player_name}» пропадёт из вашей клиентской базы.`}
+          title="Убрать ученика из базы?"
+          message={`«${removingPlayer.player_name}» пропадёт из вашей базы учеников.`}
           onConfirm={handleConfirmRemove}
           onCancel={() => setRemovingPlayer(null)}
           busy={removeBusy}

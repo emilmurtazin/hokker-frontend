@@ -140,7 +140,7 @@ export default function CoachProfileForm({ initial, onSaved, onCancel }) {
             <span className="block font-medium text-sm">Показывать меня в поиске</span>
             <span className="block text-xs text-neutral-500">
               Если выключить — вы пропадёте из каталога и общей ленты тренировок,
-              но действующие клиенты и записи не пострадают.
+              но действующие ученики и записи не пострадают.
             </span>
           </span>
         </label>

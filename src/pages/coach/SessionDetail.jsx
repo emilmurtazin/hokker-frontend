@@ -213,6 +213,8 @@ export default function SessionDetail() {
   const [bookings, setBookings] = useState(null)
   const [busyId, setBusyId] = useState(null)
   const [error, setError] = useState(null)
+  const [manualPlayerName, setManualPlayerName] = useState('')
+  const [manualBusy, setManualBusy] = useState(false)
 
   function load() {
     apiRequest(`/sessions/${sessionId}`).then(setSession).catch(() => {})
@@ -244,6 +246,24 @@ export default function SessionDetail() {
       setError(err.detail || 'Не получилось отклонить')
     } finally {
       setBusyId(null)
+    }
+  }
+
+  async function handleAddManualPlayer(e) {
+    e.preventDefault()
+    setManualBusy(true)
+    setError(null)
+    try {
+      await apiRequest(`/sessions/${sessionId}/manual-bookings`, {
+        method: 'POST',
+        body: { player_name: manualPlayerName },
+      })
+      setManualPlayerName('')
+      load()
+    } catch (err) {
+      setError(err.detail || 'Не получилось добавить ученика')
+    } finally {
+      setManualBusy(false)
     }
   }
 
@@ -285,6 +305,30 @@ export default function SessionDetail() {
 
       <div className="px-5 py-5 space-y-5">
         {error && <p className="text-action text-sm">{error}</p>}
+
+        <form onSubmit={handleAddManualPlayer} className="card">
+          <p className="font-medium text-sm">Добавить ученика вручную</p>
+          <p className="text-xs text-neutral-500 mt-0.5">
+            Для ученика, которого ещё нет в приложении, достаточно указать имя.
+          </p>
+          <div className="flex gap-2 mt-3">
+            <input
+              type="text"
+              required
+              value={manualPlayerName}
+              onChange={(e) => setManualPlayerName(e.target.value)}
+              placeholder="Имя ученика"
+              className="input-field min-w-0 flex-1 py-2"
+            />
+            <button
+              type="submit"
+              disabled={manualBusy || !manualPlayerName.trim()}
+              className="btn-primary py-2 px-3 text-sm shrink-0"
+            >
+              Добавить
+            </button>
+          </div>
+        </form>
 
         {pending.length > 0 && (
           <div>

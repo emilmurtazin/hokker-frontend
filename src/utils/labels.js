@@ -40,14 +40,6 @@ export const LOCATION_LABELS = {
   off_ice: { label: 'Вне льда', icon: '🏠' },
 }
 
-export const SPECIALIZATION_LABELS = {
-  skating: 'Катание',
-  shooting: 'Броски',
-  off_ice: 'ОФП',
-  goalie: 'Вратарская техника',
-  general: 'Общая подготовка',
-}
-
 export const POSITION_LABELS = {
   forward: 'Нападающий',
   defense: 'Защитник',
@@ -60,7 +52,12 @@ export const SESSION_TYPE_LABELS = {
   shooting: 'Броски',
   theory: 'Теория',
   game: 'Игра',
+  goalie: 'Вратарская',
 }
+
+// Специализации тренера намеренно повторяют типы тренировок: это один набор
+// фильтров и одинаковые названия во всех экранах.
+export const SPECIALIZATION_LABELS = SESSION_TYPE_LABELS
 
 export const BOOKING_STATUS_LABELS = {
   pending: 'Ждёт подтверждения тренера',

@@ -9,6 +9,10 @@ import {
 import { formatSlotDate, formatSlotTime } from '../../utils/date'
 import { useAuth } from '../../context/AuthContext'
 
+function slotHasStarted(slot) {
+  return new Date(`${slot.date}T${slot.time_start}`) <= new Date()
+}
+
 function Catalog() {
   const { user } = useAuth()
   const [city, setCity] = useState(user?.city || '')
@@ -103,6 +107,39 @@ function Catalog() {
   )
 }
 
+function RequestCard({ request, busyId, onCancel }) {
+  return (
+    <div className="card">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="font-medium">{request.slot.arena_name}</p>
+          <p className="text-sm text-neutral-500 capitalize">
+            {formatSlotDate(request.slot.date)}, {formatSlotTime(request.slot.time_start)}–
+            {formatSlotTime(request.slot.time_end)}
+          </p>
+          {request.slot.arena_phone && (
+            <p className="text-xs text-rink-700 mt-0.5">📞 {request.slot.arena_phone}</p>
+          )}
+        </div>
+        <span
+          className={`text-xs px-2 py-1 rounded-full font-medium shrink-0 ${SLOT_REQUEST_STATUS_COLORS[request.status]}`}
+        >
+          {SLOT_REQUEST_STATUS_LABELS[request.status]}
+        </span>
+      </div>
+      {(request.status === 'pending' || request.status === 'approved') && !slotHasStarted(request.slot) && (
+        <button
+          onClick={() => onCancel(request.id)}
+          disabled={busyId === request.id}
+          className="btn-secondary py-2 px-3 text-sm mt-3"
+        >
+          Отменить заявку
+        </button>
+      )}
+    </div>
+  )
+}
+
 function MyRequests() {
   const [requests, setRequests] = useState(null)
   const [busyId, setBusyId] = useState(null)
@@ -130,42 +167,41 @@ function MyRequests() {
 
   if (requests === null) return <p className="text-sm text-neutral-400">Загрузка…</p>
 
+  const currentRequests = requests.filter((request) => !slotHasStarted(request.slot))
+  const pastRequests = requests.filter((request) => slotHasStarted(request.slot))
+
   return (
     <div className="space-y-3">
       {error && <p className="text-action text-sm">{error}</p>}
       {requests.length === 0 && (
         <p className="text-sm text-neutral-500 text-center py-8">У вас пока нет заявок на лёд.</p>
       )}
-      {requests.map((r) => (
-        <div key={r.id} className="card">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="font-medium">{r.slot.arena_name}</p>
-              <p className="text-sm text-neutral-500 capitalize">
-                {formatSlotDate(r.slot.date)}, {formatSlotTime(r.slot.time_start)}–
-                {formatSlotTime(r.slot.time_end)}
-              </p>
-              {r.slot.arena_phone && (
-                <p className="text-xs text-rink-700 mt-0.5">📞 {r.slot.arena_phone}</p>
-              )}
-            </div>
-            <span
-              className={`text-xs px-2 py-1 rounded-full font-medium shrink-0 ${SLOT_REQUEST_STATUS_COLORS[r.status]}`}
-            >
-              {SLOT_REQUEST_STATUS_LABELS[r.status]}
-            </span>
-          </div>
-          {(r.status === 'pending' || r.status === 'approved') && (
-            <button
-              onClick={() => handleCancel(r.id)}
-              disabled={busyId === r.id}
-              className="btn-secondary py-2 px-3 text-sm mt-3"
-            >
-              Отменить заявку
-            </button>
-          )}
-        </div>
-      ))}
+      {currentRequests.length > 0 && (
+        <>
+          <h2 className="text-sm font-medium text-neutral-500 pt-1">Актуальные</h2>
+          {currentRequests.map((request) => (
+            <RequestCard
+              key={request.id}
+              request={request}
+              busyId={busyId}
+              onCancel={handleCancel}
+            />
+          ))}
+        </>
+      )}
+      {pastRequests.length > 0 && (
+        <>
+          <h2 className="text-sm font-medium text-neutral-500 pt-3">Прошедшие</h2>
+          {pastRequests.map((request) => (
+            <RequestCard
+              key={request.id}
+              request={request}
+              busyId={busyId}
+              onCancel={handleCancel}
+            />
+          ))}
+        </>
+      )}
     </div>
   )
 }

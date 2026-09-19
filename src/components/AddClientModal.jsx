@@ -50,7 +50,7 @@ export default function AddClientModal({ onClose, onAdded }) {
     <div className="fixed inset-0 bg-rink-900/40 z-30 flex items-end sm:items-center justify-center">
       <div className="bg-white rounded-t-2xl sm:rounded-card w-full sm:max-w-sm p-5 pb-8 sm:pb-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-lg">Добавить клиента</h2>
+          <h2 className="font-semibold text-lg">Добавить ученика</h2>
           <button onClick={onClose} className="p-1 text-neutral-400">
             <X className="w-5 h-5" />
           </button>

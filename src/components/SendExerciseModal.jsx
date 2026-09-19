@@ -55,7 +55,7 @@ export default function SendExerciseModal({ exerciseId, onClose }) {
             {players === null && <p className="text-sm text-neutral-400">Загрузка…</p>}
             {players?.length === 0 && (
               <p className="text-sm text-neutral-500">
-                В клиентской базе пока нет активных детей.
+                В базе учеников пока нет активных детей.
               </p>
             )}
 

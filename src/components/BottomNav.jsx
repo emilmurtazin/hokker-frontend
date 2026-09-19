@@ -12,7 +12,7 @@ const TABS_BY_ROLE = {
   ],
   coach: [
     { to: '/', icon: CalendarDays, label: 'Тренировки', badgeKey: 'pending' },
-    { to: '/players', icon: Users, label: 'Клиенты' },
+    { to: '/players', icon: Users, label: 'Ученики' },
     { to: '/ice', icon: Snowflake, label: 'Лёд' },
     { to: '/exercises', icon: PlayCircle, label: 'Упражнения' },
     { to: '/profile', icon: User, label: 'Профиль' },

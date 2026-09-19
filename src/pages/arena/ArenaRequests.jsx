@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Check, X as XIcon } from 'lucide-react'
 import { apiRequest } from '../../api/client'
-import { ICE_TYPE_LABELS } from '../../utils/labels'
+import { ICE_TYPE_LABELS, SPECIALIZATION_LABELS } from '../../utils/labels'
 import { formatSlotDate, formatSlotTime } from '../../utils/date'
 
 export default function ArenaRequests() {
   const [requests, setRequests] = useState(null)
   const [busyId, setBusyId] = useState(null)
   const [error, setError] = useState(null)
+  const [coachProfile, setCoachProfile] = useState(null)
 
   function load() {
     apiRequest('/arenas/me/requests?status=pending')
@@ -29,6 +30,14 @@ export default function ArenaRequests() {
     }
   }
 
+  async function showCoachProfile(coachId) {
+    try {
+      setCoachProfile(await apiRequest(`/coaches/${coachId}`))
+    } catch (err) {
+      setError(err.detail || 'Не получилось загрузить профиль тренера')
+    }
+  }
+
   if (requests === null) {
     return <div className="px-5 py-6 text-sm text-neutral-400">Загрузка…</div>
   }
@@ -45,12 +54,23 @@ export default function ArenaRequests() {
       <div className="space-y-3">
         {requests.map((r) => (
           <div key={r.id} className="card">
-            <p className="font-medium">{r.coach_name}</p>
+            <button
+              onClick={() => showCoachProfile(r.coach_id)}
+              className="font-medium text-left underline underline-offset-2"
+            >
+              {r.coach_name}
+            </button>
+            {r.coach_phone && <p className="text-xs text-rink-700 mt-0.5">📞 {r.coach_phone}</p>}
             <p className="text-sm text-neutral-500 capitalize">
               {formatSlotDate(r.slot.date)}, {formatSlotTime(r.slot.time_start)}–
               {formatSlotTime(r.slot.time_end)}
             </p>
             <p className="text-xs text-neutral-400 mt-0.5">{ICE_TYPE_LABELS[r.slot.ice_type]}</p>
+            {r.slot.price != null && (
+              <p className="text-sm text-rink-700 font-medium mt-1">
+                Аренда: {r.slot.price.toLocaleString('ru-RU')} ₽
+              </p>
+            )}
 
             <div className="flex gap-2 mt-3">
               <button
@@ -71,6 +91,33 @@ export default function ArenaRequests() {
           </div>
         ))}
       </div>
+
+      {coachProfile && (
+        <div className="fixed inset-0 bg-rink-900/40 z-30 flex items-end sm:items-center justify-center">
+          <div className="bg-white rounded-t-2xl sm:rounded-card w-full sm:max-w-sm p-5 pb-8 sm:pb-5">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="font-semibold text-lg">{coachProfile.name}</h2>
+                <p className="text-sm text-neutral-500 mt-0.5">
+                  {coachProfile.specializations
+                    ?.map((item) => SPECIALIZATION_LABELS[item] || item)
+                    .join(', ')}
+                </p>
+              </div>
+              <button onClick={() => setCoachProfile(null)} className="text-neutral-500 p-1" aria-label="Закрыть">
+                <XIcon className="w-5 h-5" />
+              </button>
+            </div>
+            {coachProfile.experience_years != null && (
+              <p className="text-sm text-neutral-500 mt-3">Опыт: {coachProfile.experience_years} лет</p>
+            )}
+            {coachProfile.age_groups?.length > 0 && (
+              <p className="text-sm text-neutral-500 mt-1">Возрастные группы: {coachProfile.age_groups.join(', ')}</p>
+            )}
+            {coachProfile.about && <p className="text-sm text-neutral-600 mt-3">{coachProfile.about}</p>}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

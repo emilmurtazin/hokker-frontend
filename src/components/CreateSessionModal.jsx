@@ -136,7 +136,7 @@ export default function CreateSessionModal({ onClose, onCreated }) {
             <p className="text-xs text-neutral-400 mt-1">
               {visibility === 'open'
                 ? 'Видна всем родителям в каталоге города'
-                : 'Видна только вашей текущей базе клиентов'}
+                : 'Видна только вашим текущим ученикам'}
             </p>
           </label>
 
