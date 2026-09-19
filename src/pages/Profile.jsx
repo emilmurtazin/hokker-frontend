@@ -175,15 +175,30 @@ function ChildrenSection() {
   )
 }
 
+// Преобразует https://t.me/Hokker_bot?start=XYZ  →  tg://resolve?domain=Hokker_bot&start=XYZ
+function toTgScheme(httpsLink) {
+  try {
+    const url = new URL(httpsLink)
+    if (url.hostname !== 't.me') return null
+    const domain = url.pathname.replace(/^\//, '')
+    const start = url.searchParams.get('start')
+    let tg = `tg://resolve?domain=${domain}`
+    if (start) tg += `&start=${start}`
+    return tg
+  } catch {
+    return null
+  }
+}
+
 export default function Profile() {
   const { user, logout } = useAuth()
   const [deepLink, setDeepLink] = useState(null)
   const [linkError, setLinkError] = useState(null)
   const [editingProfile, setEditingProfile] = useState(false)
 
-  // Ссылку на бота получаем заранее, при заходе на профиль. К моменту клика
-  // она уже готова, и переход происходит настоящей навигацией браузера —
-  // тогда Telegram на телефоне открывается сам, без промежуточной вкладки.
+  // Ссылку получаем заранее, при заходе на профиль. К моменту клика
+  // она уже готова — значит, переход сработает нативной навигацией браузера,
+  // без «пустой вкладки» и без popup-блокировок.
   useEffect(() => {
     let cancelled = false
     apiRequest('/telegram/link')
@@ -201,6 +216,32 @@ export default function Profile() {
       cancelled = true
     }
   }, [])
+
+  // Клик по кнопке. Сначала пробуем https://t.me (Universal Link, работает
+  // почти везде). Если через 1.5 секунды страница всё ещё видима — значит
+  // Telegram не перехватил ссылку (WebView / PWA / нет приложения),
+  // и мы пробуем tg://. Для PWA на iOS это часто единственный рабочий путь.
+  function handleTelegramClick(e) {
+    if (!deepLink) return
+    const tgLink = toTgScheme(deepLink)
+    if (!tgLink) return  // дадим <a> отработать самому
+
+    let navigated = false
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        navigated = true
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+
+    setTimeout(() => {
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+      if (!navigated) {
+        // Не ушли в приложение — пробуем tg://.
+        window.location.href = tgLink
+      }
+    }, 1500)
+  }
 
   if (!user) return null
 
@@ -234,12 +275,12 @@ export default function Profile() {
 
       <div className="card">
         {deepLink ? (
-          // Настоящий <a href>. Никаких window.open — так Telegram на телефоне
-          // открывается сам через Universal Link, а не через браузер.
+          // Настоящий <a href> — нативная навигация. Плюс onClick-фолбэк на tg://.
           <a
             href={deepLink}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={handleTelegramClick}
             className="flex items-center gap-3 w-full text-left"
           >
             <div className="w-9 h-9 rounded-full bg-[#229ED9]/10 flex items-center justify-center shrink-0">
@@ -251,8 +292,6 @@ export default function Profile() {
             </div>
           </a>
         ) : (
-          // Ссылку ещё не получили — показываем неактивную заглушку,
-          // чтобы пользователь не кликал в пустоту.
           <div className="flex items-center gap-3 w-full text-left opacity-60">
             <div className="w-9 h-9 rounded-full bg-[#229ED9]/10 flex items-center justify-center shrink-0">
               <Send className="w-4 h-4 text-[#229ED9]" />
