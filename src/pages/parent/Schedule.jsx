@@ -101,6 +101,16 @@ export default function Schedule() {
                   <p className="font-medium">{SESSION_TYPE_LABELS[session.type] || session.type}</p>
                   <p className="text-sm text-neutral-500">{formatDateTime(session.datetime)} · {formatDurationMinutes(session.duration_minutes)}</p>
                   <p className="text-xs text-neutral-400 mt-0.5">{booking.childName}</p>
+                  <div className="text-xs text-neutral-500 mt-2 space-y-0.5">
+                    {session.arena_name && <p>Место: {session.arena_name}</p>}
+                    {session.arena_address && <p>Адрес: {session.arena_address}</p>}
+                    {session.coach_name && (
+                      <p>
+                        Тренер: {session.coach_name}
+                        {session.coach_phone && ` · ${session.coach_phone}`}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <span
                   className={`text-xs px-2 py-1 rounded-full font-medium shrink-0 ${

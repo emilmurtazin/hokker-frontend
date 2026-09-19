@@ -21,7 +21,7 @@ function CoachesList({ city, specialization, ageGroup }) {
     setLoading(true)
     setError(null)
     const params = new URLSearchParams({ city })
-    if (specialization) params.set('specialization', specialization)
+    if (specialization) params.set('type', specialization)
     if (ageGroup) params.set('age_group', ageGroup)
 
     apiRequest(`/coaches?${params.toString()}`)

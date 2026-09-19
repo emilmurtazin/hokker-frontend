@@ -18,6 +18,7 @@ export default function CreateSessionModal({ onClose, onCreated }) {
   const [datetimeLocal, setDatetimeLocal] = useState('')
   const [durationMinutes, setDurationMinutes] = useState(60)
   const [arenaName, setArenaName] = useState('')
+  const [arenaId, setArenaId] = useState(null)
   const [maxPlayers, setMaxPlayers] = useState(10)
   const [price, setPrice] = useState('')
   const [busy, setBusy] = useState(false)
@@ -46,6 +47,7 @@ export default function CreateSessionModal({ onClose, onCreated }) {
     if (!req) return
 
     setArenaName(req.slot.arena_name)
+    setArenaId(req.slot.arena_id)
 
     const start = new Date(`${req.slot.date}T${req.slot.time_start}`)
     const offset = start.getTimezoneOffset()
@@ -77,6 +79,7 @@ export default function CreateSessionModal({ onClose, onCreated }) {
           datetime: isoDatetime,
           duration_minutes: Number(durationMinutes),
           arena_name: arenaName || null,
+          arena_id: arenaId,
           max_players: Number(maxPlayers),
           price: price === '' ? null : Number(price),
         },
@@ -193,7 +196,10 @@ export default function CreateSessionModal({ onClose, onCreated }) {
             <input
               type="text"
               value={arenaName}
-              onChange={(e) => setArenaName(e.target.value)}
+              onChange={(e) => {
+                setArenaName(e.target.value)
+                setArenaId(null)
+              }}
               className="input-field"
               placeholder="Название арены"
             />
