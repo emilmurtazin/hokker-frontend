@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LogOut, Send, MapPin, Trash2, Plus, Check, X as XIcon, ChevronRight, Pencil } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
-import { apiRequest, ApiError } from '../api/client'
+import { apiRequest } from '../api/client'
 import { useChildren } from '../hooks/useChildren'
 import { POSITION_LABELS } from '../utils/labels'
 import { age } from '../utils/date'
@@ -16,22 +16,6 @@ const ROLE_LABELS = {
   parent: 'Родитель',
   arena_admin: 'Администратор арены',
   admin: 'Администратор платформы',
-}
-
-// https://t.me/Hokker_bot?start=XYZ  →  tg://resolve?domain=Hokker_bot&start=XYZ
-// Прямая схема приложения: браузер не участвует, блокировки РФ ни при чём.
-function toTgScheme(httpsLink) {
-  try {
-    const url = new URL(httpsLink)
-    if (url.hostname !== 't.me') return null
-    const domain = url.pathname.replace(/^\//, '')
-    const start = url.searchParams.get('start')
-    let tg = `tg://resolve?domain=${domain}`
-    if (start) tg += `&start=${start}`
-    return tg
-  } catch {
-    return null
-  }
 }
 
 function InvitesSection() {
@@ -193,61 +177,7 @@ function ChildrenSection() {
 
 export default function Profile() {
   const { user, logout } = useAuth()
-  const [deepLink, setDeepLink] = useState(null)
-  const [linkError, setLinkError] = useState(null)
   const [editingProfile, setEditingProfile] = useState(false)
-
-  // Ссылку получаем заранее — при заходе на профиль. К моменту клика
-  // она уже готова: значит переход сработает мгновенно, без «висит запрос».
-  useEffect(() => {
-    let cancelled = false
-    apiRequest('/telegram/link')
-      .then((data) => {
-        if (!cancelled) setDeepLink(data.deep_link)
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setLinkError(
-            err instanceof ApiError ? err.detail : 'Не получилось получить ссылку',
-          )
-        }
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  // Клик по кнопке. Никаких window.open и пустых вкладок:
-  // 1. Пробуем tg:// — прямая схема приложения, минует браузер.
-  // 2. Если через 1.5 c всё ещё на странице — откатываемся на https://t.me.
-  function handleTelegramClick() {
-    if (!deepLink) return
-    const tgLink = toTgScheme(deepLink)
-
-    let navigated = false
-    const onVisibility = () => {
-      if (document.visibilityState === 'hidden') navigated = true
-    }
-    document.addEventListener('visibilitychange', onVisibility)
-
-    if (tgLink) {
-      window.location.href = tgLink
-    } else {
-      // Ссылка не распарсилась — сразу https://t.me
-      navigated = true
-      window.location.href = deepLink
-      return
-    }
-
-    setTimeout(() => {
-      document.removeEventListener('visibilitychange', onVisibility)
-      if (!navigated) {
-        // Telegram не открылся (не установлен / WebView заблокировал tg://).
-        // Открываем страницу-приглашение t.me.
-        window.location.href = deepLink
-      }
-    }, 1500)
-  }
 
   if (!user) return null
 
@@ -280,33 +210,39 @@ export default function Profile() {
       {user.role === 'parent' && <ChildrenSection />}
 
       <div className="card">
-        {deepLink ? (
-          // Обычная <a href>: не открывает пустых вкладок, работает как
-          // нативная навигация. onClick добавляет fallback на tg://.
+        {user.telegram_deep_link ? (
+          // Ссылка пришла вместе с профилем — она уже в HTML при первом
+          // рендере. Никаких window.open и await: iOS/Android открывают
+          // Telegram сами, как нативная навигация.
           <a
-            href={deepLink}
+            href={user.telegram_deep_link}
+            target="_blank"
             rel="noopener noreferrer"
-            onClick={handleTelegramClick}
             className="flex items-center gap-3 w-full text-left"
           >
             <div className="w-9 h-9 rounded-full bg-[#229ED9]/10 flex items-center justify-center shrink-0">
               <Send className="w-4 h-4 text-[#229ED9]" />
             </div>
             <div>
-              <p className="font-medium text-sm">Привязать Telegram</p>
-              <p className="text-xs text-neutral-500">Уведомления о записях и оценках</p>
+              <p className="font-medium text-sm">
+                {user.telegram_chat_id ? 'Telegram привязан' : 'Привязать Telegram'}
+              </p>
+              <p className="text-xs text-neutral-500">
+                {user.telegram_chat_id
+                  ? 'Уведомления приходят в Telegram'
+                  : 'Уведомления о записях и оценках'}
+              </p>
             </div>
           </a>
         ) : (
+          // TELEGRAM_BOT_USERNAME не задан на бэкенде — кнопку не показываем
           <div className="flex items-center gap-3 w-full text-left opacity-60">
             <div className="w-9 h-9 rounded-full bg-[#229ED9]/10 flex items-center justify-center shrink-0">
               <Send className="w-4 h-4 text-[#229ED9]" />
             </div>
             <div>
               <p className="font-medium text-sm">Привязать Telegram</p>
-              <p className="text-xs text-neutral-500">
-                {linkError ? linkError : 'Загружаем ссылку…'}
-              </p>
+              <p className="text-xs text-neutral-500">Скоро</p>
             </div>
           </div>
         )}
