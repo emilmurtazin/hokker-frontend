@@ -177,33 +177,30 @@ function ChildrenSection() {
 
 export default function Profile() {
   const { user, logout } = useAuth()
-  const [linking, setLinking] = useState(false)
+  const [deepLink, setDeepLink] = useState(null)
   const [linkError, setLinkError] = useState(null)
   const [editingProfile, setEditingProfile] = useState(false)
 
-  async function handleTelegramLink() {
-    setLinking(true)
-    setLinkError(null)
-    // Окно открываем СРАЗУ, в обработчике клика, и только потом подставляем
-    // ссылку. Если вызвать window.open после await, iOS Safari и часть
-    // мобильных браузеров считают это всплывающим окном не по клику и
-    // блокируют его — кнопка выглядит «мёртвой».
-    const popup = window.open('', '_blank')
-    try {
-      const data = await apiRequest('/telegram/link')
-      if (popup) {
-        popup.location.href = data.deep_link
-      } else {
-        // Окно не открылось (PWA, блокировщик) — переходим в этой же вкладке.
-        window.location.href = data.deep_link
-      }
-    } catch (err) {
-      popup?.close()
-      setLinkError(err instanceof ApiError ? err.detail : 'Не получилось получить ссылку')
-    } finally {
-      setLinking(false)
+  // Ссылку на бота получаем заранее, при заходе на профиль. К моменту клика
+  // она уже готова, и переход происходит настоящей навигацией браузера —
+  // тогда Telegram на телефоне открывается сам, без промежуточной вкладки.
+  useEffect(() => {
+    let cancelled = false
+    apiRequest('/telegram/link')
+      .then((data) => {
+        if (!cancelled) setDeepLink(data.deep_link)
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setLinkError(
+            err instanceof ApiError ? err.detail : 'Не получилось получить ссылку',
+          )
+        }
+      })
+    return () => {
+      cancelled = true
     }
-  }
+  }, [])
 
   if (!user) return null
 
@@ -236,20 +233,38 @@ export default function Profile() {
       {user.role === 'parent' && <ChildrenSection />}
 
       <div className="card">
-        <button
-          onClick={handleTelegramLink}
-          disabled={linking}
-          className="flex items-center gap-3 w-full text-left"
-        >
-          <div className="w-9 h-9 rounded-full bg-[#229ED9]/10 flex items-center justify-center shrink-0">
-            <Send className="w-4 h-4 text-[#229ED9]" />
+        {deepLink ? (
+          // Настоящий <a href>. Никаких window.open — так Telegram на телефоне
+          // открывается сам через Universal Link, а не через браузер.
+          <a
+            href={deepLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 w-full text-left"
+          >
+            <div className="w-9 h-9 rounded-full bg-[#229ED9]/10 flex items-center justify-center shrink-0">
+              <Send className="w-4 h-4 text-[#229ED9]" />
+            </div>
+            <div>
+              <p className="font-medium text-sm">Привязать Telegram</p>
+              <p className="text-xs text-neutral-500">Уведомления о записях и оценках</p>
+            </div>
+          </a>
+        ) : (
+          // Ссылку ещё не получили — показываем неактивную заглушку,
+          // чтобы пользователь не кликал в пустоту.
+          <div className="flex items-center gap-3 w-full text-left opacity-60">
+            <div className="w-9 h-9 rounded-full bg-[#229ED9]/10 flex items-center justify-center shrink-0">
+              <Send className="w-4 h-4 text-[#229ED9]" />
+            </div>
+            <div>
+              <p className="font-medium text-sm">Привязать Telegram</p>
+              <p className="text-xs text-neutral-500">
+                {linkError ? linkError : 'Загружаем ссылку…'}
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="font-medium text-sm">Привязать Telegram</p>
-            <p className="text-xs text-neutral-500">Уведомления о записях и оценках</p>
-          </div>
-        </button>
-        {linkError && <p className="text-action text-sm mt-2">{linkError}</p>}
+        )}
       </div>
 
       <button
