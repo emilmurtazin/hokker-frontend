@@ -18,24 +18,6 @@ const ROLE_LABELS = {
   admin: 'Администратор платформы',
 }
 
-// https://t.me/Hokker_bot?start=XYZ  →  tg://resolve?domain=Hokker_bot&start=XYZ
-// Прямая схема приложения: браузер не участвует, iOS/Android открывают
-// Telegram сами — как нативная навигация по custom-схеме.
-function toTgScheme(httpsLink) {
-  if (!httpsLink) return null
-  try {
-    const url = new URL(httpsLink)
-    if (url.hostname !== 't.me') return null
-    const domain = url.pathname.replace(/^\//, '')
-    const start = url.searchParams.get('start')
-    let tg = `tg://resolve?domain=${domain}`
-    if (start) tg += `&start=${start}`
-    return tg
-  } catch {
-    return null
-  }
-}
-
 function InvitesSection() {
   const [invites, setInvites] = useState(null)
   const [busyId, setBusyId] = useState(null)
@@ -199,10 +181,6 @@ export default function Profile() {
 
   if (!user) return null
 
-  // Готовим tg://-ссылку заранее — она идёт прямо в href, без onClick.
-  // Никаких window.location и window.open: только нативная навигация.
-  const tgLink = toTgScheme(user.telegram_deep_link) || user.telegram_deep_link || null
-
   return (
     <div className="px-5 py-6 space-y-5">
       <div className="card flex items-center gap-4">
@@ -242,12 +220,13 @@ export default function Profile() {
               <p className="text-xs text-neutral-500">Уведомления приходят в Telegram</p>
             </div>
           </div>
-        ) : tgLink ? (
-          // Обычный <a href="tg://..."> — без onClick, без target="_blank".
-          // Браузер выполняет нативную навигацию по custom-схеме, и система
-          // передаёт управление приложению Telegram.
+        ) : user.telegram_deep_link ? (
+          // Обычный <a href="https://t.me/..."> — нативная навигация браузера.
+          // Telegram сам перехватывает ссылку и открывает приложение, а параметр
+          // ?start=<JWT> гарантированно доходит до бота.
+          // Никаких onClick, window.open, target="_blank" и tg://.
           <a
-            href={tgLink}
+            href={user.telegram_deep_link}
             className="flex items-center gap-3 w-full text-left"
           >
             <div className="w-9 h-9 rounded-full bg-[#229ED9]/10 flex items-center justify-center shrink-0">
