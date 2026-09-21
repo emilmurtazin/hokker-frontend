@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { apiRequest, getTokens, setTokens } from '../api/client'
 
 const AuthContext = createContext(null)
@@ -65,6 +65,18 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
+  // Перечитать профиль с сервера (например, после привязки Telegram в боте).
+  // Ошибку не пробрасываем: устаревший профиль лучше, чем сломанный экран.
+  const refreshUser = useCallback(async () => {
+    try {
+      const fresh = await apiRequest('/users/me')
+      setUser(fresh)
+      return fresh
+    } catch {
+      return null
+    }
+  }, [])
+
   async function updateProfile(patch) {
     const updated = await apiRequest('/users/me', { method: 'PATCH', body: patch })
     setUser(updated)
@@ -73,7 +85,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, requestCode, verifyCode, register, logout, updateProfile }}
+      value={{ user, loading, requestCode, verifyCode, register, logout, updateProfile, refreshUser }}
     >
       {children}
     </AuthContext.Provider>

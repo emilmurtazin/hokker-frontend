@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { LogOut, Send, MapPin, Trash2, Plus, Check, X as XIcon, ChevronRight, Pencil } from 'lucide-react'
+import { LogOut, Send, MapPin, Trash2, Plus, Check, X as XIcon, ChevronRight, Pencil, Copy } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../api/client'
 import { useChildren } from '../hooks/useChildren'
@@ -35,6 +35,160 @@ function toTgScheme(httpsLink) {
   } catch {
     return null
   }
+}
+
+// Имя бота из ссылки https://t.me/HokkerSchool_bot?start=XYZ  →  HokkerSchool_bot
+function botFromLink(httpsLink) {
+  try {
+    const url = new URL(httpsLink)
+    return url.hostname === 't.me' ? url.pathname.replace(/^\//, '') || null : null
+  } catch {
+    return null
+  }
+}
+
+// Токен привязки из ссылки: …?start=XYZ  →  XYZ
+function startTokenFrom(httpsLink) {
+  try {
+    return new URL(httpsLink).searchParams.get('start')
+  } catch {
+    return null
+  }
+}
+
+// tg://-ссылка надёжно открывает приложение Telegram на телефоне, но на компьютере
+// и в браузерной версии Telegram (web.telegram.org) она ничего не делает, если
+// приложения нет. Поэтому на компьютере ведём по обычной ссылке t.me — она
+// открывается в новой вкладке и предлагает открыть бота в вебе или в приложении.
+function isMobileDevice() {
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+}
+
+function TelegramCard({ user }) {
+  const { refreshUser } = useAuth()
+  const [copied, setCopied] = useState(false)
+  const lastRefresh = useRef(0)
+  const linked = Boolean(user.telegram_chat_id)
+
+  // Профиль мог быть загружен до появления ссылки привязки, а привязка происходит
+  // в другом приложении (Telegram). Поэтому перечитываем профиль при открытии экрана
+  // и каждый раз, когда человек возвращается в приложение, пока Telegram не привязан.
+  useEffect(() => {
+    if (linked) return undefined
+    const refresh = () => {
+      if (document.visibilityState !== 'visible') return
+      if (Date.now() - lastRefresh.current < 1500) return // focus + visibilitychange приходят парой
+      lastRefresh.current = Date.now()
+      refreshUser()
+    }
+    refresh()
+    window.addEventListener('focus', refresh)
+    document.addEventListener('visibilitychange', refresh)
+    return () => {
+      window.removeEventListener('focus', refresh)
+      document.removeEventListener('visibilitychange', refresh)
+    }
+  }, [linked, refreshUser])
+
+  const botName = user.telegram_bot_username || botFromLink(user.telegram_deep_link)
+  const handle = botName ? `@${botName}` : null
+  const token = startTokenFrom(user.telegram_deep_link)
+  const command = token ? `/start ${token}` : null
+  const mobile = isMobileDevice()
+  const href = mobile
+    ? toTgScheme(user.telegram_deep_link) || user.telegram_deep_link
+    : user.telegram_deep_link
+
+  async function copyCommand() {
+    try {
+      await navigator.clipboard.writeText(command)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Буфер обмена недоступен — поле с командой выделяется по нажатию, скопируйте вручную.
+    }
+  }
+
+  const icon = (
+    <div className="w-9 h-9 rounded-full bg-[#229ED9]/10 flex items-center justify-center shrink-0">
+      <Send className="w-4 h-4 text-[#229ED9]" />
+    </div>
+  )
+
+  if (linked) {
+    return (
+      <div className="card flex items-center gap-3 w-full text-left">
+        {icon}
+        <div>
+          <p className="font-medium text-sm">Telegram привязан</p>
+          <p className="text-xs text-neutral-500">
+            Уведомления приходят {handle ? `от ${handle}` : 'в Telegram'}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!href) {
+    return (
+      <div className="card flex items-center gap-3 w-full text-left opacity-60">
+        {icon}
+        <div>
+          <p className="font-medium text-sm">Привязать Telegram</p>
+          <p className="text-xs text-neutral-500">Скоро</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="card space-y-3">
+      <a
+        href={href}
+        {...(mobile ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
+        className="flex items-center gap-3 w-full text-left"
+      >
+        {icon}
+        <div>
+          <p className="font-medium text-sm">Привязать Telegram</p>
+          <p className="text-xs text-neutral-500">
+            Нажмите — откроется бот{handle && <> <span className="font-semibold text-[#229ED9]">{handle}</span></>}
+          </p>
+        </div>
+      </a>
+
+      {command && (
+        <details className="text-xs text-neutral-500">
+          <summary className="cursor-pointer select-none">Не открывается? Привязать вручную</summary>
+          <div className="mt-2 space-y-2">
+            <p>
+              1. Найдите в Telegram бота{' '}
+              {handle ? <span className="font-semibold text-neutral-700 select-all">{handle}</span> : 'нашего бота'}{' '}
+              (через поиск) и откройте чат с ним.
+            </p>
+            <p>2. Отправьте ему эту команду:</p>
+            <div className="flex gap-2">
+              <input
+                readOnly
+                value={command}
+                onFocus={(e) => e.target.select()}
+                aria-label="Команда для привязки Telegram"
+                className="input-field flex-1 min-w-0 text-xs font-mono"
+              />
+              <button
+                type="button"
+                onClick={copyCommand}
+                className="shrink-0 px-3 border border-ice-300 rounded-card text-neutral-600 flex items-center gap-1"
+              >
+                <Copy className="w-3.5 h-3.5" />
+                {copied ? 'Готово' : 'Копировать'}
+              </button>
+            </div>
+          </div>
+        </details>
+      )}
+    </div>
+  )
 }
 
 function InvitesSection() {
@@ -200,11 +354,6 @@ export default function Profile() {
 
   if (!user) return null
 
-  // Готовим tg://-ссылку заранее — она идёт прямо в href, без onClick.
-  // Если ссылка не распарсилась — фолбэк на https://t.me/... (Telegram сам
-  // перехватит домен t.me и откроет приложение).
-  const tgLink = toTgScheme(user.telegram_deep_link) || user.telegram_deep_link || null
-
   return (
     <div className="px-5 py-6 space-y-5">
       <div className="card flex items-center gap-4">
@@ -233,47 +382,7 @@ export default function Profile() {
       {user.role === 'parent' && <InvitesSection />}
       {user.role === 'parent' && <ChildrenSection />}
 
-      <div className="card">
-        {user.telegram_chat_id ? (
-          <div className="flex items-center gap-3 w-full text-left">
-            <div className="w-9 h-9 rounded-full bg-[#229ED9]/10 flex items-center justify-center shrink-0">
-              <Send className="w-4 h-4 text-[#229ED9]" />
-            </div>
-            <div>
-              <p className="font-medium text-sm">Telegram привязан</p>
-              <p className="text-xs text-neutral-500">Уведомления приходят в Telegram</p>
-            </div>
-          </div>
-        ) : tgLink ? (
-          // Обычный <a href="tg://..."> — без onClick, без target="_blank".
-          // Браузер выполняет нативную навигацию по custom-схеме, и система
-          // передаёт управление приложению Telegram.
-          <a
-            href={tgLink}
-            className="flex items-center gap-3 w-full text-left"
-          >
-            <div className="w-9 h-9 rounded-full bg-[#229ED9]/10 flex items-center justify-center shrink-0">
-              <Send className="w-4 h-4 text-[#229ED9]" />
-            </div>
-            <div>
-              <p className="font-medium text-sm">Привязать Telegram</p>
-              <p className="text-xs text-neutral-500">
-                Нажмите кнопку — откроется бот прямо в Telegram
-              </p>
-            </div>
-          </a>
-        ) : (
-          <div className="flex items-center gap-3 w-full text-left opacity-60">
-            <div className="w-9 h-9 rounded-full bg-[#229ED9]/10 flex items-center justify-center shrink-0">
-              <Send className="w-4 h-4 text-[#229ED9]" />
-            </div>
-            <div>
-              <p className="font-medium text-sm">Привязать Telegram</p>
-              <p className="text-xs text-neutral-500">Скоро</p>
-            </div>
-          </div>
-        )}
-      </div>
+      <TelegramCard user={user} />
 
       <button
         onClick={logout}

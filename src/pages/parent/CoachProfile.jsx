@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
+import { useGoBack } from '../../utils/navigation'
 import { ChevronLeft, Users } from 'lucide-react'
 import { apiRequest } from '../../api/client'
 import { SPECIALIZATION_LABELS, SESSION_TYPE_LABELS } from '../../utils/labels'
@@ -8,7 +9,7 @@ import BookSessionModal from '../../components/BookSessionModal'
 
 export default function CoachProfile() {
   const { coachId } = useParams()
-  const navigate = useNavigate()
+  const goBack = useGoBack()
   const [profile, setProfile] = useState(null)
   const [sessions, setSessions] = useState(null)
   const [error, setError] = useState(null)
@@ -57,7 +58,7 @@ export default function CoachProfile() {
   return (
     <div>
       <div className="px-5 py-4 flex items-center gap-3 border-b border-ice-200">
-        <button onClick={() => navigate(-1)} className="p-1 -ml-1 text-neutral-500">
+        <button onClick={goBack} className="p-1 -ml-1 text-neutral-500">
           <ChevronLeft className="w-5 h-5" />
         </button>
         <div className="jersey-stat w-11 h-11 text-base">{profile.name?.[0]?.toUpperCase()}</div>

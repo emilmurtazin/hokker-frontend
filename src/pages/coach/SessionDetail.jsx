@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useGoBack } from '../../utils/navigation'
 import { ChevronLeft, Check, X as XIcon, Trash2, Star } from 'lucide-react'
 import { apiRequest } from '../../api/client'
 import ConfirmModal from '../../components/ConfirmModal'
@@ -209,6 +210,7 @@ function RatingsSection({ sessionId, confirmedPlayers }) {
 export default function SessionDetail() {
   const { sessionId } = useParams()
   const navigate = useNavigate()
+  const goBack = useGoBack()
   const [session, setSession] = useState(null)
   const [bookings, setBookings] = useState(null)
   const [busyId, setBusyId] = useState(null)
@@ -292,7 +294,7 @@ export default function SessionDetail() {
   return (
     <div>
       <div className="px-5 py-4 flex items-center gap-3 border-b border-ice-200">
-        <button onClick={() => navigate(-1)} className="p-1 -ml-1 text-neutral-500">
+        <button onClick={goBack} className="p-1 -ml-1 text-neutral-500">
           <ChevronLeft className="w-5 h-5" />
         </button>
         <div>

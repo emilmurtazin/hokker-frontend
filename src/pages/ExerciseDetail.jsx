@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
+import { useGoBack } from '../utils/navigation'
 import { ChevronLeft, Users, Clock, MapPin, Package, Send, X } from 'lucide-react'
 import { apiRequest } from '../api/client'
 import { useAuth } from '../context/AuthContext'
@@ -82,7 +83,7 @@ function CardViewer({ src, alt, onClose }) {
 
 export default function ExerciseDetail() {
   const { exerciseId } = useParams()
-  const navigate = useNavigate()
+  const goBack = useGoBack()
   const { user } = useAuth()
   const [exercise, setExercise] = useState(null)
   const [error, setError] = useState(null)
@@ -118,7 +119,7 @@ export default function ExerciseDetail() {
   return (
     <div>
       <div className="px-5 py-4 flex items-center gap-3 border-b border-ice-200">
-        <button onClick={() => navigate(-1)} className="p-1 -ml-1 text-neutral-500">
+        <button onClick={goBack} className="p-1 -ml-1 text-neutral-500">
           <ChevronLeft className="w-5 h-5" />
         </button>
         <div className="min-w-0">

@@ -60,11 +60,24 @@ export async function apiRequest(path, { method = 'GET', body, auth = true, retr
     if (tokens?.access_token) headers['Authorization'] = `Bearer ${tokens.access_token}`
   }
 
-  const res = await fetch(`${API_BASE_URL}${path}`, {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  })
+  let res
+  try {
+    res = await fetch(`${API_BASE_URL}${path}`, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    })
+  } catch (networkError) {
+    // fetch «падает» без ответа, когда нет сети, сервер недоступен или браузер
+    // заблокировал запрос из-за CORS (адрес сайта не разрешён на сервере — CORS_ORIGINS).
+    // Пользователю — понятный текст, разработчику — подсказка в консоли.
+    console.error(
+      `[API] Нет ответа на ${method} ${API_BASE_URL}${path}. Проверьте сеть и что адрес сайта ` +
+        `(${window.location.origin}) разрешён на сервере в CORS_ORIGINS / APP_PUBLIC_URL.`,
+      networkError
+    )
+    throw new ApiError(0, 'Нет связи с сервером. Проверьте интернет и попробуйте ещё раз.')
+  }
 
   if (res.status === 401 && auth && retry) {
     try {

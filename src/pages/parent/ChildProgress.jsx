@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
+import { useGoBack } from '../../utils/navigation'
 import { ChevronLeft } from 'lucide-react'
 import { apiRequest } from '../../api/client'
 import { SKILL_LABELS, POSITION_LABELS } from '../../utils/labels'
@@ -7,7 +8,7 @@ import { formatDate } from '../../utils/date'
 
 export default function ChildProgress() {
   const { childId } = useParams()
-  const navigate = useNavigate()
+  const goBack = useGoBack()
   const [passport, setPassport] = useState(null)
   const [history, setHistory] = useState(null)
   const [error, setError] = useState(null)
@@ -42,7 +43,7 @@ export default function ChildProgress() {
   return (
     <div>
       <div className="px-5 py-4 flex items-center gap-3 border-b border-ice-200">
-        <button onClick={() => navigate(-1)} className="p-1 -ml-1 text-neutral-500">
+        <button onClick={goBack} className="p-1 -ml-1 text-neutral-500">
           <ChevronLeft className="w-5 h-5" />
         </button>
         <div>

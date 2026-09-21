@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { Phone, ShieldCheck, ChevronLeft, AlertTriangle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { ApiError } from '../api/client'
@@ -16,7 +15,6 @@ function digitsOnly(value) {
 
 export default function AuthFlow() {
   const { requestCode, verifyCode, register } = useAuth()
-  const navigate = useNavigate()
 
   const [step, setStep] = useState('phone') // phone -> code -> register
   const [phoneDigits, setPhoneDigits] = useState('')
@@ -62,9 +60,11 @@ export default function AuthFlow() {
       if (data.status === 'registration_required') {
         setRegistrationToken(data.registration_token)
         setStep('register')
-      } else {
-        navigate('/', { replace: true })
       }
+      // Если вошли (не регистрация) — ничего не делаем: как только появляется user,
+      // приложение само показывает тот экран, что открыт в адресной строке. Раньше
+      // здесь был navigate('/'), и ссылка из бота («Открыть упражнение») после входа
+      // по SMS вела на главную, а не на нужное упражнение.
     } catch (err) {
       setError(err instanceof ApiError ? err.detail : 'Неверный код')
     } finally {
@@ -78,7 +78,6 @@ export default function AuthFlow() {
     setBusy(true)
     try {
       await register(registrationToken, role, name, city || undefined)
-      navigate('/', { replace: true })
     } catch (err) {
       setError(err instanceof ApiError ? err.detail : 'Не получилось завершить регистрацию')
     } finally {

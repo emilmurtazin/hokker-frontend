@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import BottomNav from './components/BottomNav'
+import TelegramBackButton from './components/TelegramBackButton'
 import AuthFlow from './pages/AuthFlow'
 import Profile from './pages/Profile'
 import ComingSoon from './pages/ComingSoon'
@@ -99,6 +100,7 @@ function AppShell() {
       </main>
 
       <BottomNav role={user.role} />
+      <TelegramBackButton />
     </div>
   )
 }
