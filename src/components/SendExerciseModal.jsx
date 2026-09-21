@@ -52,6 +52,10 @@ export default function SendExerciseModal({ exerciseId, onClose }) {
           </div>
         ) : (
           <form onSubmit={handleSend} className="space-y-4">
+            <p className="text-sm text-neutral-500">
+              Родителю придёт упражнение в Telegram — с карточкой, если она есть, и кнопкой
+              «Открыть упражнение».
+            </p>
             {players === null && <p className="text-sm text-neutral-400">Загрузка…</p>}
             {players?.length === 0 && (
               <p className="text-sm text-neutral-500">
