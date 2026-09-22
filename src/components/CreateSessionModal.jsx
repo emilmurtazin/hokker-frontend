@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import { apiRequest } from '../api/client'
 import { SESSION_TYPE_LABELS } from '../utils/labels'
+import GroupChips from './GroupChips'
 
 function localDatetimeNow() {
   const now = new Date()
@@ -24,6 +25,8 @@ export default function CreateSessionModal({ onClose, onCreated }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
   const [bookedSlots, setBookedSlots] = useState([])
+  const [groups, setGroups] = useState([])
+  const [groupIds, setGroupIds] = useState([]) // пусто = всем ученикам
 
   useEffect(() => {
     // Заявки на лёд, которые арена уже подтвердила — тренер может выбрать
@@ -39,6 +42,11 @@ export default function CreateSessionModal({ onClose, onCreated }) {
         setBookedSlots(approved)
       })
       .catch(() => setBookedSlots([]))
+
+    // Группы клиентов — для закрытых тренировок («для кого доступна»).
+    apiRequest('/coaches/me/groups')
+      .then(setGroups)
+      .catch(() => setGroups([]))
   }, [])
 
   function handlePickSlot(requestId) {
@@ -82,6 +90,8 @@ export default function CreateSessionModal({ onClose, onCreated }) {
           arena_id: arenaId,
           max_players: Number(maxPlayers),
           price: price === '' ? null : Number(price),
+          // Группы действуют только у закрытой тренировки; пусто — всем ученикам тренера.
+          group_ids: visibility === 'closed' ? groupIds : [],
         },
       })
       onCreated(session)
@@ -139,9 +149,30 @@ export default function CreateSessionModal({ onClose, onCreated }) {
             <p className="text-xs text-neutral-400 mt-1">
               {visibility === 'open'
                 ? 'Видна всем родителям в каталоге города'
-                : 'Видна только вашим текущим ученикам'}
+                : 'Видна только вашим ученикам — в каталоге тренировок и в вашем профиле'}
             </p>
           </label>
+
+          {visibility === 'closed' && (
+            <div>
+              <span className="block text-sm font-medium mb-1.5">Для кого</span>
+              {groups.length > 0 ? (
+                <>
+                  <GroupChips groups={groups} selectedIds={groupIds} onChange={setGroupIds} />
+                  <p className="text-xs text-neutral-400 mt-1">
+                    {groupIds.length === 0
+                      ? 'Доступна всем вашим ученикам. Или выберите группы — тогда только им.'
+                      : 'Увидят и смогут записаться только ученики выбранных групп.'}
+                  </p>
+                </>
+              ) : (
+                <p className="text-xs text-neutral-400">
+                  Доступна всем вашим ученикам. Чтобы ограничить доступ, создайте группы на экране
+                  «Ученики».
+                </p>
+              )}
+            </div>
+          )}
 
           <label className="block">
             <span className="block text-sm font-medium mb-1.5">Дата и время начала</span>

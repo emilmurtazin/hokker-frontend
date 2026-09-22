@@ -145,6 +145,11 @@ export default function CoachHome() {
                   <span className="text-xs text-neutral-400">
                     {s.booked_count} / {s.max_players}
                   </span>
+                  {s.visibility === 'closed' && (
+                    <span className="text-xs text-neutral-400 truncate">
+                      {s.groups?.length ? `для: ${s.groups.map((g) => g.name).join(', ')}` : 'для всех учеников'}
+                    </span>
+                  )}
                   {s.price != null && (
                     <span className="text-xs text-rink-700 font-medium">
                       {s.price.toLocaleString('ru-RU')} ₽

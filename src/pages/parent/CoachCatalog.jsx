@@ -133,7 +133,7 @@ function TrainingsFeed({ city, specialization, ageGroup }) {
       {loading && <p className="text-sm text-neutral-400 text-center py-6">Ищем тренировки…</p>}
       {sessions && !loading && sessions.length === 0 && (
         <p className="text-sm text-neutral-500 text-center py-8">
-          В городе «{city}» пока нет открытых тренировок
+          В городе «{city}» пока нет доступных тренировок
           {specialization || ageGroup ? ' с такими фильтрами' : ''}.
         </p>
       )}
@@ -143,7 +143,14 @@ function TrainingsFeed({ city, specialization, ageGroup }) {
           const full = s.booked_count >= s.max_players
           return (
             <div key={s.id} className="card">
-              <p className="font-medium">{SESSION_TYPE_LABELS[s.type] || s.type}</p>
+              <div className="flex items-start justify-between gap-2">
+                <p className="font-medium">{SESSION_TYPE_LABELS[s.type] || s.type}</p>
+                {s.visibility === 'closed' && (
+                  <span className="text-xs bg-ice-200 text-neutral-500 px-2 py-1 rounded-full shrink-0">
+                    Закрытая
+                  </span>
+                )}
+              </div>
               <p className="text-sm text-neutral-500">
                 {formatDateTime(s.datetime)} · {formatDurationMinutes(s.duration_minutes)}
               </p>

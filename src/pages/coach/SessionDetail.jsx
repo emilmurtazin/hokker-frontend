@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useGoBack } from '../../utils/navigation'
-import { ChevronLeft, Check, X as XIcon, Trash2, Star } from 'lucide-react'
+import { ChevronLeft, Check, X as XIcon, Trash2, Star, UserPlus, Lock } from 'lucide-react'
 import { apiRequest } from '../../api/client'
 import ConfirmModal from '../../components/ConfirmModal'
+import AddParticipantsModal from '../../components/AddParticipantsModal'
+import SessionAccessModal from '../../components/SessionAccessModal'
 import { SESSION_TYPE_LABELS, BOOKING_STATUS_LABELS, BOOKING_STATUS_COLORS, SKILL_LABELS, POSITION_LABELS } from '../../utils/labels'
 import { formatDateTime, formatDurationMinutes } from '../../utils/date'
 
@@ -215,17 +217,31 @@ export default function SessionDetail() {
   const [bookings, setBookings] = useState(null)
   const [busyId, setBusyId] = useState(null)
   const [error, setError] = useState(null)
-  const [manualPlayerName, setManualPlayerName] = useState('')
-  const [manualBusy, setManualBusy] = useState(false)
+  const [showAdd, setShowAdd] = useState(false)
+  const [showAccess, setShowAccess] = useState(false)
+  const [groups, setGroups] = useState([])
 
+  // Возвращает промис, чтобы окна могли дождаться обновления списка.
   function load() {
-    apiRequest(`/sessions/${sessionId}`).then(setSession).catch(() => {})
-    apiRequest(`/sessions/${sessionId}/bookings`)
+    const s = apiRequest(`/sessions/${sessionId}`).then(setSession).catch(() => {})
+    const b = apiRequest(`/sessions/${sessionId}/bookings`)
       .then(setBookings)
       .catch((err) => setError(err.detail || 'Не получилось загрузить записи'))
+    return Promise.all([s, b])
   }
 
-  useEffect(load, [sessionId])
+  function openAccess() {
+    apiRequest('/coaches/me/groups')
+      .then(setGroups)
+      .catch(() => setGroups([]))
+      .finally(() => setShowAccess(true))
+  }
+
+  useEffect(() => {
+    load()
+    // load возвращает промис (для окон), поэтому нельзя передать его в useEffect напрямую
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId])
 
   async function handleApprove(id) {
     setBusyId(id)
@@ -251,24 +267,6 @@ export default function SessionDetail() {
     }
   }
 
-  async function handleAddManualPlayer(e) {
-    e.preventDefault()
-    setManualBusy(true)
-    setError(null)
-    try {
-      await apiRequest(`/sessions/${sessionId}/manual-bookings`, {
-        method: 'POST',
-        body: { player_name: manualPlayerName },
-      })
-      setManualPlayerName('')
-      load()
-    } catch (err) {
-      setError(err.detail || 'Не получилось добавить ученика')
-    } finally {
-      setManualBusy(false)
-    }
-  }
-
   const [cancellingSession, setCancellingSession] = useState(false)
   const [cancelBusy, setCancelBusy] = useState(false)
 
@@ -290,6 +288,9 @@ export default function SessionDetail() {
 
   const pending = bookings.filter((b) => b.status === 'pending')
   const others = bookings.filter((b) => b.status !== 'pending')
+  const ACTIVE = ['pending', 'confirmed', 'waiting', 'invited']
+  const bookedPlayerIds = bookings.filter((b) => b.player_id && ACTIVE.includes(b.status)).map((b) => b.player_id)
+  const freeSpots = Math.max(0, session.max_players - bookings.filter((b) => b.status === 'confirmed').length)
 
   return (
     <div>
@@ -308,29 +309,36 @@ export default function SessionDetail() {
       <div className="px-5 py-5 space-y-5">
         {error && <p className="text-action text-sm">{error}</p>}
 
-        <form onSubmit={handleAddManualPlayer} className="card">
-          <p className="font-medium text-sm">Добавить ученика вручную</p>
-          <p className="text-xs text-neutral-500 mt-0.5">
-            Для ученика, которого ещё нет в приложении, достаточно указать имя.
-          </p>
-          <div className="flex gap-2 mt-3">
-            <input
-              type="text"
-              required
-              value={manualPlayerName}
-              onChange={(e) => setManualPlayerName(e.target.value)}
-              placeholder="Имя ученика"
-              className="input-field min-w-0 flex-1 py-2"
-            />
-            <button
-              type="submit"
-              disabled={manualBusy || !manualPlayerName.trim()}
-              className="btn-primary py-2 px-3 text-sm shrink-0"
-            >
-              Добавить
+        {session.visibility === 'closed' && (
+          <div className="card flex items-center justify-between gap-3">
+            <div className="flex items-start gap-2 min-w-0">
+              <Lock className="w-4 h-4 text-neutral-400 mt-0.5 shrink-0" />
+              <div className="min-w-0">
+                <p className="font-medium text-sm">Закрытая тренировка</p>
+                <p className="text-xs text-neutral-500">
+                  {session.groups?.length
+                    ? `Для групп: ${session.groups.map((g) => g.name).join(', ')}`
+                    : 'Доступна всем вашим ученикам'}
+                </p>
+              </div>
+            </div>
+            <button onClick={openAccess} className="btn-secondary py-1.5 px-3 text-sm shrink-0">
+              Изменить
             </button>
           </div>
-        </form>
+        )}
+
+        <div className="card flex items-center justify-between gap-3">
+          <div>
+            <p className="font-medium text-sm">Добавить участников</p>
+            <p className="text-xs text-neutral-500 mt-0.5">
+              Из базы, целыми группами или по имени. Свободно мест: {freeSpots}
+            </p>
+          </div>
+          <button onClick={() => setShowAdd(true)} className="btn-primary py-2 px-3 text-sm shrink-0 flex items-center gap-1.5">
+            <UserPlus className="w-4 h-4" /> Добавить
+          </button>
+        </div>
 
         {pending.length > 0 && (
           <div>
@@ -410,6 +418,25 @@ export default function SessionDetail() {
           <Trash2 className="w-4 h-4" /> Отменить тренировку
         </button>
       </div>
+
+      {showAdd && (
+        <AddParticipantsModal
+          sessionId={sessionId}
+          freeSpots={freeSpots}
+          bookedPlayerIds={bookedPlayerIds}
+          onDone={load}
+          onClose={() => setShowAdd(false)}
+        />
+      )}
+
+      {showAccess && (
+        <SessionAccessModal
+          session={session}
+          groups={groups}
+          onSaved={load}
+          onClose={() => setShowAccess(false)}
+        />
+      )}
 
       {cancellingSession && (
         <ConfirmModal
