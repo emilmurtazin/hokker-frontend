@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { apiRequest } from '../../api/client'
+import Switch from '../../components/Switch'
 import { SPECIALIZATION_LABELS, AGE_GROUPS } from '../../utils/labels'
 
 function toggleInArray(array, value) {
@@ -129,21 +130,18 @@ export default function CoachProfileForm({ initial, onSaved, onCancel }) {
           />
         </label>
 
-        <label className="flex items-start gap-3 p-3.5 rounded-card border border-ice-300 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={visibleInSearch}
-            onChange={(e) => setVisibleInSearch(e.target.checked)}
-            className="mt-1"
-          />
-          <span>
-            <span className="block font-medium text-sm">Показывать меня в поиске</span>
-            <span className="block text-xs text-neutral-500">
-              Если выключить — вы пропадёте из каталога и общей ленты тренировок,
-              но действующие ученики и записи не пострадают.
-            </span>
-          </span>
-        </label>
+        <Switch
+          checked={visibleInSearch}
+          onChange={setVisibleInSearch}
+          label="Показывать меня в поиске"
+          description={
+            visibleInSearch
+              ? 'Родители найдут вас в каталоге и общей ленте тренировок города.'
+              : 'Вы не будете отображаться в каталоге и общей ленте открытых тренировок. Ученики, ' +
+                'которых вы уже добавили в базу, и записанные родители по-прежнему видят ваш профиль ' +
+                'и записи, а закрытые тренировки остаются доступны их группам.'
+          }
+        />
 
         {error && <p className="text-action text-sm">{error}</p>}
         <div className="flex gap-2">
