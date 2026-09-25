@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { X, Plus, Pencil, Trash2, Check, ChevronLeft, Users } from 'lucide-react'
+import { Plus, Pencil, Trash2, Check, ChevronLeft, Users } from 'lucide-react'
 import { apiRequest } from '../api/client'
 import ClientPicker from './ClientPicker'
 import ConfirmModal from './ConfirmModal'
+import ModalShell from './ModalShell'
 
 function pluralStudents(n) {
   const m10 = n % 10
@@ -90,31 +91,33 @@ export default function GroupsModal({ groups, players, onChanged, onClose }) {
     if (ok) setMembersOf(null)
   }
 
-  return (
-    <div className="fixed inset-0 bg-rink-900/40 z-30 flex items-end sm:items-center justify-center">
-      <div className="bg-white rounded-t-2xl sm:rounded-card w-full sm:max-w-sm p-5 pb-8 sm:pb-5 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-4">
-          {membersOf ? (
-            <button onClick={() => setMembersOf(null)} className="flex items-center gap-1 font-semibold text-lg">
-              <ChevronLeft className="w-5 h-5 -ml-1" /> {membersOf.name}
-            </button>
-          ) : (
-            <h2 className="font-semibold text-lg">Группы учеников</h2>
-          )}
-          <button onClick={onClose} aria-label="Закрыть" className="p-1 text-neutral-400">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+  const title = membersOf ? (
+    <button onClick={() => setMembersOf(null)} className="flex items-center gap-1 font-semibold text-lg -ml-1.5">
+      <ChevronLeft className="w-5 h-5 shrink-0" /> <span className="truncate">{membersOf.name}</span>
+    </button>
+  ) : (
+    'Группы учеников'
+  )
 
-        {error && <p className="text-action text-sm mb-3">{error}</p>}
+  return (
+    <>
+      <ModalShell
+        title={title}
+        onClose={onClose}
+        footer={
+          membersOf && (
+            <button onClick={saveMembers} disabled={busy} className="btn-primary w-full">
+              {busy ? 'Сохраняем…' : `Сохранить (${selected.size})`}
+            </button>
+          )
+        }
+      >
+        {error && <p className="text-action text-sm">{error}</p>}
 
         {membersOf ? (
           <div className="space-y-3">
             <p className="text-sm text-neutral-500">Отметьте учеников, которые входят в группу.</p>
             <ClientPicker clients={players} groups={groups} selectedIds={selected} onToggle={toggleMember} />
-            <button onClick={saveMembers} disabled={busy} className="btn-primary w-full">
-              {busy ? 'Сохраняем…' : `Сохранить (${selected.size})`}
-            </button>
           </div>
         ) : (
           <div className="space-y-4">
@@ -193,7 +196,7 @@ export default function GroupsModal({ groups, players, onChanged, onClose }) {
             </div>
           </div>
         )}
-      </div>
+      </ModalShell>
 
       {deleting && (
         <ConfirmModal
@@ -204,6 +207,6 @@ export default function GroupsModal({ groups, players, onChanged, onClose }) {
           busy={busy}
         />
       )}
-    </div>
+    </>
   )
 }

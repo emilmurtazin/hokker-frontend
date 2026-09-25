@@ -5,7 +5,7 @@ import { apiRequest } from '../api/client'
 
 const TABS_BY_ROLE = {
   parent: [
-    { to: '/', icon: Search, label: 'Тренеры' },
+    { to: '/', icon: Search, label: 'Тренировки' },
     { to: '/schedule', icon: CalendarDays, label: 'Расписание', badgeKey: 'invited' },
     { to: '/exercises', icon: PlayCircle, label: 'Упражнения' },
     { to: '/profile', icon: User, label: 'Профиль', badgeKey: 'invites' },

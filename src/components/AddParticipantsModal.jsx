@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { X } from 'lucide-react'
 import { apiRequest } from '../api/client'
 import ClientPicker from './ClientPicker'
+import ModalShell from './ModalShell'
 
 const TABS = [
   ['clients', 'Ученики'],
@@ -95,138 +95,138 @@ export default function AddParticipantsModal({ sessionId, freeSpots, bookedPlaye
 
   const willAdd = targetIds.size
   const notEnough = freeSpots != null && willAdd > freeSpots
+  const dataReady = players !== null && groups !== null
+
+  let footer
+  if (result) {
+    footer = (
+      <button onClick={onClose} className="btn-primary w-full">
+        Готово
+      </button>
+    )
+  } else if (tab === 'manual') {
+    // Кнопка физически лежит в закреплённом футере, но остаётся частью формы
+    // ниже через атрибут form — так Enter в поле имени по-прежнему отправляет её.
+    footer = (
+      <button type="submit" form="add-participants-manual-form" disabled={busy || !manualName.trim()} className="btn-primary w-full">
+        {busy ? 'Добавляем…' : 'Добавить'}
+      </button>
+    )
+  } else {
+    footer = (
+      <>
+        <div className="text-xs text-neutral-500 space-y-1 mb-3">
+          {freeSpots != null && <p>Свободных мест: {freeSpots}</p>}
+          {notEnough && (
+            <p className="text-goal">Мест не хватит: {willAdd - freeSpots} из выбранных останутся без записи.</p>
+          )}
+        </div>
+        <button
+          onClick={submit}
+          disabled={busy || !dataReady || (selClients.size === 0 && selGroups.size === 0)}
+          className="btn-primary w-full"
+        >
+          {busy ? 'Добавляем…' : willAdd > 0 ? `Записать (${willAdd})` : 'Записать'}
+        </button>
+      </>
+    )
+  }
 
   return (
-    <div className="fixed inset-0 bg-rink-900/40 z-30 flex items-end sm:items-center justify-center">
-      <div className="bg-white rounded-t-2xl sm:rounded-card w-full sm:max-w-sm p-5 pb-8 sm:pb-5 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-lg">Добавить участников</h2>
-          <button onClick={onClose} aria-label="Закрыть" className="p-1 text-neutral-400">
-            <X className="w-5 h-5" />
-          </button>
+    <ModalShell title="Добавить участников" onClose={onClose} footer={footer}>
+      {result ? (
+        <div className="space-y-3">
+          <p className="text-sm font-medium">
+            {result.added.length > 0
+              ? `Записано: ${result.added.length}. Родители получат уведомление.`
+              : 'Никого не удалось записать.'}
+          </p>
+          {result.skipped.length > 0 && (
+            <div>
+              <p className="text-sm font-medium text-goal mb-1">Не записаны ({result.skipped.length}):</p>
+              <ul className="text-sm text-neutral-600 space-y-1">
+                {result.skipped.map((s) => (
+                  <li key={s.player_name}>
+                    {s.player_name} — <span className="text-neutral-400">{s.reason}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
-
-        {result ? (
-          <div className="space-y-3">
-            <p className="text-sm font-medium">
-              {result.added.length > 0
-                ? `Записано: ${result.added.length}. Родители получат уведомление.`
-                : 'Никого не удалось записать.'}
-            </p>
-            {result.skipped.length > 0 && (
-              <div>
-                <p className="text-sm font-medium text-goal mb-1">Не записаны ({result.skipped.length}):</p>
-                <ul className="text-sm text-neutral-600 space-y-1">
-                  {result.skipped.map((s) => (
-                    <li key={s.player_name}>
-                      {s.player_name} — <span className="text-neutral-400">{s.reason}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            <button onClick={onClose} className="btn-primary w-full">
-              Готово
-            </button>
+      ) : (
+        <>
+          <div className="grid grid-cols-3 gap-1 p-1 bg-ice-100 rounded-card">
+            {TABS.map(([value, label]) => (
+              <button
+                key={value}
+                onClick={() => {
+                  setTab(value)
+                  setError(null)
+                }}
+                className={`py-2 rounded-lg text-sm font-medium transition-colors ${
+                  tab === value ? 'bg-white shadow-sm text-rink-900' : 'text-neutral-500'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-3 gap-1 p-1 bg-ice-100 rounded-card mb-4">
-              {TABS.map(([value, label]) => (
-                <button
-                  key={value}
-                  onClick={() => {
-                    setTab(value)
-                    setError(null)
-                  }}
-                  className={`py-2 rounded-lg text-sm font-medium transition-colors ${
-                    tab === value ? 'bg-white shadow-sm text-rink-900' : 'text-neutral-500'
+
+          {error && <p className="text-action text-sm">{error}</p>}
+
+          {tab === 'manual' ? (
+            <form id="add-participants-manual-form" onSubmit={addManual} className="space-y-3">
+              <p className="text-sm text-neutral-500">
+                Для ученика, которого ещё нет в приложении, достаточно указать имя.
+              </p>
+              <input
+                type="text"
+                required
+                value={manualName}
+                onChange={(e) => setManualName(e.target.value)}
+                placeholder="Имя ученика"
+                className="input-field"
+              />
+              {manualNote && <p className="text-sm text-green-700">{manualNote}</p>}
+            </form>
+          ) : !dataReady ? (
+            <p className="text-sm text-neutral-400 py-4 text-center">Загрузка…</p>
+          ) : tab === 'clients' ? (
+            <ClientPicker
+              clients={players}
+              groups={groups}
+              selectedIds={selClients}
+              disabledIds={disabledIds}
+              onToggle={(id) => toggle(setSelClients, selClients, id)}
+            />
+          ) : groups.length === 0 ? (
+            <p className="text-sm text-neutral-500 text-center py-4">
+              Групп пока нет. Создайте их на экране «Ученики» (кнопка «Группы»).
+            </p>
+          ) : (
+            <div className="space-y-1.5">
+              {groups.map((g) => (
+                <label
+                  key={g.id}
+                  className={`flex items-center gap-3 p-3 rounded-card border ${
+                    selGroups.has(g.id) ? 'border-rink-900 bg-rink-900/[0.03]' : 'border-ice-300'
                   }`}
                 >
-                  {label}
-                </button>
+                  <input
+                    type="checkbox"
+                    checked={selGroups.has(g.id)}
+                    onChange={() => toggle(setSelGroups, selGroups, g.id)}
+                    className="w-4 h-4"
+                  />
+                  <span className="flex-1 text-sm font-medium">{g.name}</span>
+                  <span className="text-xs text-neutral-400">{g.members_count} уч.</span>
+                </label>
               ))}
             </div>
-
-            {error && <p className="text-action text-sm mb-3">{error}</p>}
-
-            {tab === 'manual' ? (
-              <form onSubmit={addManual} className="space-y-3">
-                <p className="text-sm text-neutral-500">
-                  Для ученика, которого ещё нет в приложении, достаточно указать имя.
-                </p>
-                <input
-                  type="text"
-                  required
-                  value={manualName}
-                  onChange={(e) => setManualName(e.target.value)}
-                  placeholder="Имя ученика"
-                  className="input-field"
-                />
-                {manualNote && <p className="text-sm text-green-700">{manualNote}</p>}
-                <button type="submit" disabled={busy || !manualName.trim()} className="btn-primary w-full">
-                  Добавить
-                </button>
-              </form>
-            ) : players === null || groups === null ? (
-              <p className="text-sm text-neutral-400 py-4 text-center">Загрузка…</p>
-            ) : (
-              <div className="space-y-4">
-                {tab === 'clients' ? (
-                  <ClientPicker
-                    clients={players}
-                    groups={groups}
-                    selectedIds={selClients}
-                    disabledIds={disabledIds}
-                    onToggle={(id) => toggle(setSelClients, selClients, id)}
-                  />
-                ) : groups.length === 0 ? (
-                  <p className="text-sm text-neutral-500 text-center py-4">
-                    Групп пока нет. Создайте их на экране «Ученики» (кнопка «Группы»).
-                  </p>
-                ) : (
-                  <div className="space-y-1.5">
-                    {groups.map((g) => (
-                      <label
-                        key={g.id}
-                        className={`flex items-center gap-3 p-3 rounded-card border ${
-                          selGroups.has(g.id) ? 'border-rink-900 bg-rink-900/[0.03]' : 'border-ice-300'
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selGroups.has(g.id)}
-                          onChange={() => toggle(setSelGroups, selGroups, g.id)}
-                          className="w-4 h-4"
-                        />
-                        <span className="flex-1 text-sm font-medium">{g.name}</span>
-                        <span className="text-xs text-neutral-400">{g.members_count} уч.</span>
-                      </label>
-                    ))}
-                  </div>
-                )}
-
-                <div className="text-xs text-neutral-500 space-y-1">
-                  {freeSpots != null && <p>Свободных мест: {freeSpots}</p>}
-                  {notEnough && (
-                    <p className="text-goal">
-                      Мест не хватит: {willAdd - freeSpots} из выбранных останутся без записи.
-                    </p>
-                  )}
-                </div>
-
-                <button
-                  onClick={submit}
-                  disabled={busy || (selClients.size === 0 && selGroups.size === 0)}
-                  className="btn-primary w-full"
-                >
-                  {busy ? 'Добавляем…' : willAdd > 0 ? `Записать (${willAdd})` : 'Записать'}
-                </button>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </div>
+          )}
+        </>
+      )}
+    </ModalShell>
   )
 }
