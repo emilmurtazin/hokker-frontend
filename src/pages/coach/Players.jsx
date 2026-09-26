@@ -8,11 +8,13 @@ import MessageParentModal from '../../components/MessageParentModal'
 import ConfirmModal from '../../components/ConfirmModal'
 import GroupsModal from '../../components/GroupsModal'
 import PlayerGroupsModal from '../../components/PlayerGroupsModal'
+import JoinCodeCard from '../../components/JoinCodeCard'
 
 export default function Players() {
   const navigate = useNavigate()
   const [players, setPlayers] = useState(null)
   const [groups, setGroups] = useState([])
+  const [profile, setProfile] = useState(null)
   const [groupFilter, setGroupFilter] = useState('all') // 'all' | 'none' | id группы
   const [showGroups, setShowGroups] = useState(false)
   const [editingGroupsOf, setEditingGroupsOf] = useState(null)
@@ -23,13 +25,19 @@ export default function Players() {
   const [removeBusy, setRemoveBusy] = useState(false)
 
   // Возвращаем промис, чтобы окна групп могли дождаться обновления данных.
+  // Профиль (для кода клиентов) грузим отдельно: если его ещё не заполнили —
+  // это не должно мешать показать список учеников и группы.
   function load() {
-    return Promise.all([apiRequest('/coaches/me/players'), apiRequest('/coaches/me/groups')])
+    const main = Promise.all([apiRequest('/coaches/me/players'), apiRequest('/coaches/me/groups')])
       .then(([p, g]) => {
         setPlayers(p)
         setGroups(g)
       })
       .catch((err) => setError(err.detail || 'Не получилось загрузить учеников'))
+    const profileLoad = apiRequest('/coaches/me/profile')
+      .then(setProfile)
+      .catch(() => setProfile(null))
+    return Promise.all([main, profileLoad])
   }
 
   useEffect(() => {
@@ -89,6 +97,8 @@ export default function Players() {
           </button>
         </div>
       </div>
+
+      {profile && <JoinCodeCard profile={profile} onProfileChanged={setProfile} />}
 
       {groups.length > 0 && (
         <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1">

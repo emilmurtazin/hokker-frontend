@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { LogOut, Send, MapPin, Trash2, Plus, Check, X as XIcon, ChevronRight, Pencil, Copy } from 'lucide-react'
+import { LogOut, Send, MapPin, Trash2, Plus, Check, X as XIcon, ChevronRight, Pencil, Copy, KeyRound } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../api/client'
 import { useChildren } from '../hooks/useChildren'
@@ -10,6 +10,7 @@ import AddChildModal from '../components/AddChildModal'
 import EditChildModal from '../components/EditChildModal'
 import EditNameCityModal from '../components/EditNameCityModal'
 import ConfirmModal from '../components/ConfirmModal'
+import JoinCoachModal from '../components/JoinCoachModal'
 
 const ROLE_LABELS = {
   coach: 'Тренер',
@@ -188,6 +189,24 @@ function TelegramCard({ user }) {
         </details>
       )}
     </div>
+  )
+}
+
+function JoinCoachSection() {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <button onClick={() => setOpen(true)} className="card flex items-center gap-3 w-full text-left">
+        <div className="w-9 h-9 rounded-full bg-rink-900/[0.06] flex items-center justify-center shrink-0">
+          <KeyRound className="w-4 h-4 text-rink-900" />
+        </div>
+        <div>
+          <p className="font-medium text-sm">Есть код тренера?</p>
+          <p className="text-xs text-neutral-500">Добавьтесь в его базу сами, без приглашения</p>
+        </div>
+      </button>
+      {open && <JoinCoachModal onClose={() => setOpen(false)} />}
+    </>
   )
 }
 
@@ -379,6 +398,7 @@ export default function Profile() {
         </div>
       )}
 
+      {user.role === 'parent' && <JoinCoachSection />}
       {user.role === 'parent' && <InvitesSection />}
       {user.role === 'parent' && <ChildrenSection />}
 
