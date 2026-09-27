@@ -68,10 +68,18 @@ export default function Users() {
       header: 'Доп. инфо',
       render: (r) => {
         if (r.role === 'parent') return `Детей: ${r.children_count ?? 0}`
-        if (r.role === 'coach') return `Активных учеников: ${r.active_students_count ?? 0}`
+        if (r.role === 'coach') {
+          const ages = r.age_groups?.length ? r.age_groups.join(', ') : '—'
+          return `Учеников: ${r.active_students_count ?? 0} · Возраст: ${ages}`
+        }
         if (r.role === 'arena_admin') return r.arena_name || '—'
         return '—'
       },
+    },
+    {
+      key: 'telegram',
+      header: 'Telegram',
+      render: (r) => (r.telegram_linked ? <Badge color="blue">Привязан</Badge> : <Badge color="gray">Не привязан</Badge>),
     },
     {
       key: 'status',

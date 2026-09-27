@@ -106,7 +106,9 @@ export default function UserDetail() {
           <div className="flex items-center gap-2">
             <Badge color={ROLE_COLORS[user.role]}>{ROLE_LABELS[user.role] || user.role}</Badge>
             {user.is_blocked ? <Badge color="red">Заблокирован</Badge> : <Badge color="green">Активен</Badge>}
-            {user.telegram_linked && <Badge color="blue">Telegram привязан</Badge>}
+            <Badge color={user.telegram_linked ? 'blue' : 'gray'}>
+              {user.telegram_linked ? 'Telegram привязан' : 'Telegram не привязан'}
+            </Badge>
           </div>
         }
       >
@@ -187,6 +189,10 @@ export default function UserDetail() {
             <div>
               <div className="text-xs text-neutral-500">Специализации</div>
               <div>{user.coach_profile.specializations.join(', ') || '—'}</div>
+            </div>
+            <div>
+              <div className="text-xs text-neutral-500">Возрастные группы</div>
+              <div>{user.coach_profile.age_groups.join(', ') || '—'}</div>
             </div>
             <div>
               <div className="text-xs text-neutral-500">Опыт</div>

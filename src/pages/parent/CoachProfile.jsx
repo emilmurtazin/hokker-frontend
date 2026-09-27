@@ -73,10 +73,10 @@ export default function CoachProfile() {
 
       <div className="px-5 py-5 space-y-4">
         {profile.about && <p className="text-sm text-neutral-600">{profile.about}</p>}
-        {profile.age_groups && (
+        {profile.age_groups?.length > 0 && (
           <div className="flex items-center gap-2 text-sm text-neutral-500">
             <Users className="w-4 h-4" />
-            Возрастные группы: {profile.age_groups}
+            Возрастные группы: {profile.age_groups.join(', ')}
           </div>
         )}
 

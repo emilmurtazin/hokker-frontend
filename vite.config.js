@@ -8,6 +8,14 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png', 'logo-icon.png'],
+      // Панель администратора (/admin) — отдельный SPA на том же домене.
+      // Без этого service worker основного приложения перехватывает любую
+      // навигацию в пределах origin (scope по умолчанию — "/") и вместо
+      // обращения к серверу отдаёт закэшированную оболочку ЭТОГО приложения,
+      // так что /admin/* никогда не доходит до nginx/своего index.html.
+      workbox: {
+        navigateFallbackDenylist: [/^\/admin/],
+      },
       manifest: {
         name: '24hokker.ru — Школа хоккея',
         short_name: '24hokker.ru',
