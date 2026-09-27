@@ -1,0 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-ice-100 text-rink-900 font-body antialiased;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-action text-white font-medium rounded-card px-4 py-2 text-sm
+           hover:bg-action-hover transition-colors
+           disabled:opacity-40 disabled:pointer-events-none;
+  }
+  .btn-secondary {
+    @apply bg-white text-rink-900 font-medium rounded-card px-4 py-2 text-sm
+           border border-ice-300 hover:bg-ice-100 transition-colors
+           disabled:opacity-40 disabled:pointer-events-none;
+  }
+  .btn-danger {
+    @apply bg-white text-action font-medium rounded-card px-4 py-2 text-sm
+           border border-action/30 hover:bg-action-light transition-colors
+           disabled:opacity-40 disabled:pointer-events-none;
+  }
+  .card {
+    @apply bg-white rounded-card shadow-sm border border-ice-200;
+  }
+  .input-field {
+    @apply w-full bg-white border border-ice-300 rounded-card px-3 py-2 text-sm
+           text-rink-900 placeholder:text-neutral-400
+           focus:outline-none focus:border-rink-700 focus:ring-2 focus:ring-rink-700/10
+           transition-colors;
+  }
+  .th {
+    @apply text-left text-xs font-semibold uppercase tracking-wide text-neutral-500 px-4 py-3 whitespace-nowrap;
+  }
+  .td {
+    @apply px-4 py-3 text-sm text-rink-900 whitespace-nowrap;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium;
+  }
+}
