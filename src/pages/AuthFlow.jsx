@@ -125,6 +125,10 @@ export default function AuthFlow() {
             >
               {busy ? 'Отправляем код…' : 'Получить код'}
             </button>
+            <p className="text-xs text-neutral-400 text-center leading-snug">
+              Нажимая «Получить код», вы даёте согласие на обработку ваших персональных данных
+              (номер телефона, имя, город) для работы сервиса.
+            </p>
             <a href="#about" className="block text-center text-sm text-rink-700 pt-1">
               Что такое 24hokker.ru ↓
             </a>
