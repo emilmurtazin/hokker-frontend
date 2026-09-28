@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Phone, ShieldCheck, ChevronLeft, AlertTriangle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { ApiError } from '../api/client'
+import Landing from '../components/landing/Landing'
 
 const ROLES = [
   { value: 'parent', label: 'Я родитель', hint: 'Ищу тренера и записываю ребёнка' },
@@ -85,8 +86,11 @@ export default function AuthFlow() {
     }
   }
 
+  const showLanding = step === 'phone'
+
   return (
-    <div className="min-h-screen flex flex-col justify-center px-6 py-10">
+    <div>
+    <div className={showLanding ? 'px-6 pt-10 pb-6' : 'min-h-screen flex flex-col justify-center px-6 py-10'}>
       <div className="max-w-sm mx-auto w-full">
         <div className="mb-8 text-center">
           <img src="/logo-icon.png" alt="24hokker.ru" className="w-16 h-16 mx-auto mb-3" />
@@ -121,6 +125,9 @@ export default function AuthFlow() {
             >
               {busy ? 'Отправляем код…' : 'Получить код'}
             </button>
+            <a href="#about" className="block text-center text-sm text-rink-700 pt-1">
+              Что такое 24hokker.ru ↓
+            </a>
           </form>
         )}
 
@@ -229,6 +236,10 @@ export default function AuthFlow() {
           </form>
         )}
       </div>
+    </div>
+    {showLanding && (
+      <Landing onStart={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
+    )}
     </div>
   )
 }

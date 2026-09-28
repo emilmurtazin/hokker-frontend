@@ -87,6 +87,7 @@ function CoachesList({ city, specialization, ageGroup }) {
 }
 
 function TrainingsFeed({ city, specialization, ageGroup }) {
+  const navigate = useNavigate()
   const [sessions, setSessions] = useState(null)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -142,7 +143,16 @@ function TrainingsFeed({ city, specialization, ageGroup }) {
         {sessions?.map((s) => {
           const full = s.booked_count >= s.max_players
           return (
-            <div key={s.id} className="card">
+            <div
+              key={s.id}
+              role="link"
+              tabIndex={0}
+              onClick={() => navigate(`/coaches/${s.coach_id}`)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') navigate(`/coaches/${s.coach_id}`)
+              }}
+              className="card cursor-pointer active:bg-ice-50"
+            >
               <div className="flex items-start justify-between gap-2">
                 <p className="font-medium">{SESSION_TYPE_LABELS[s.type] || s.type}</p>
                 {s.visibility === 'closed' && (
@@ -155,7 +165,7 @@ function TrainingsFeed({ city, specialization, ageGroup }) {
                 {formatDateTime(s.datetime)} · {formatDurationMinutes(s.duration_minutes)}
               </p>
               <p className="text-xs text-neutral-400 mt-0.5">
-                Тренер: {s.coach_name}
+                Тренер: <span className="text-rink-700 font-medium">{s.coach_name}</span>
                 {s.arena_name && ` · ${s.arena_name}`}
               </p>
               {s.price != null && (
@@ -168,7 +178,10 @@ function TrainingsFeed({ city, specialization, ageGroup }) {
                   {s.booked_count} / {s.max_players} мест
                 </span>
                 <button
-                  onClick={() => setBookingSession(s)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setBookingSession(s)
+                  }}
                   className={`py-2 px-4 text-sm rounded-card font-medium transition-colors ${
                     full
                       ? 'bg-ice-200 text-neutral-600 active:bg-ice-300'
